@@ -1,0 +1,18 @@
+---
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.13.9
+
+inputs:
+  - name: dp-sessions-api
+
+caches:
+  - path: go/
+
+run:
+  path: dp-sessions-api/ci/scripts/unit.sh
