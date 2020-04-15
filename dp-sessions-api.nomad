@@ -26,7 +26,7 @@ job "dp-sessions-api" {
       mode     = "delay"
     }
 
-    task "dp-sessions-api-publishing" {
+    task "dp-sessions-api" {
       driver = "docker"
 
       artifact {
@@ -69,7 +69,7 @@ job "dp-sessions-api" {
       }
 
       vault {
-        policies = ["dp-sessions-api-publishing"]
+        policies = ["dp-sessions-api"]
       }
     }
   }
