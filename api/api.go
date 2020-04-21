@@ -17,6 +17,7 @@ func Setup(ctx context.Context, r *mux.Router) *API {
 	}
 
 	r.HandleFunc("/hello", HelloHandler()).Methods("GET")
+	r.HandleFunc("/session", CreateNewSessionHandler()).Methods("POST")
 	return api
 }
 
