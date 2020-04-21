@@ -19,15 +19,7 @@ func CreateNewSessionHandler() http.HandlerFunc {
 			return
 		}
 
-		jsonString, err := sess.MarshalJSON()
-		if err != nil {
-			log.Event(ctx, "marshalling response failed", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to marshall json response", http.StatusInternalServerError)
-			return
-		}
-
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write(jsonString)
 	}
 }
