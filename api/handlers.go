@@ -7,7 +7,8 @@ import (
 	"net/http"
 )
 
-func CreateNewSessionHandler() http.HandlerFunc {
+// CreateSessionHandlerFunc returns a function that generates a session. Method = "POST"
+func CreateSessionHandlerFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -18,6 +19,8 @@ func CreateNewSessionHandler() http.HandlerFunc {
 			http.Error(w, "Failed to decode session json", http.StatusBadRequest)
 			return
 		}
+
+		log.Event(ctx, "session created", log.Data{"session": sess}, log.INFO)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
