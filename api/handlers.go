@@ -15,8 +15,8 @@ func CreateSessionHandlerFunc() http.HandlerFunc {
 		var sess session.Session
 		err := json.NewDecoder(r.Body).Decode(&sess)
 		if err != nil {
-			log.Event(ctx, "unable to decode session", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to decode session json", http.StatusBadRequest)
+			log.Event(ctx, "unable to unmarshal session", log.Error(err), log.ERROR)
+			http.Error(w, "Failed to unmarshal session json", http.StatusBadRequest)
 			return
 		}
 

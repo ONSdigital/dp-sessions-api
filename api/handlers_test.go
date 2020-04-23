@@ -26,13 +26,13 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		})
 	})
 
-	Convey("Give a request to /session with body with all elements", t, func() {
+	Convey("Give a valid create session request to /session with body with all elements", t, func() {
 		sess := session.Session{
 			ID:    "123",
 			Email: "me@me.com",
 			Start: time.Now(),
 		}
-		sessJSON, _ := sess.MarshalJSON()
+		sessJSON, err := sess.MarshalJSON()
 
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
 		resp := httptest.NewRecorder()
@@ -42,6 +42,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 			Convey("Then the response should be 201", func() {
 				So(resp.Code, ShouldEqual, 201)
+				So(err, ShouldBeNil)
 			})
 		})
 	})
