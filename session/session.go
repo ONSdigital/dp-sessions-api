@@ -1,8 +1,10 @@
 package session
 
 import (
+	"context"
 	"encoding/json"
 	errs "github.com/ONSdigital/dp-sessions-api/apierrors"
+	"github.com/ONSdigital/log.go/log"
 	"github.com/google/uuid"
 	"time"
 )
@@ -18,8 +20,8 @@ type Session struct {
 	Start time.Time `json:"start"`
 }
 
-// CreateSessionEntity is the structure of the request needed to create a session
-type CreateSessionEntity struct {
+// NewSessionDetails is the structure of the request needed to create a session
+type NewSessionDetails struct {
 	Email string `json:"email"`
 }
 
@@ -52,8 +54,8 @@ func CreateNewSession(email string) Session {
 	}
 }
 
-// OK checks CreateSessionEntity is valid
-func (c *CreateSessionEntity) OK() error {
+// ValidateNewSessionDetails checks NewSessionDetails is valid
+func (c *NewSessionDetails) ValidateNewSessionDetails() error {
 	if len(c.Email) == 0 {
 		return errs.ErrMissingField
 	}
@@ -63,6 +65,7 @@ func (c *CreateSessionEntity) OK() error {
 func newID() string {
 	id, err := uuid.NewUUID()
 	if err != nil {
+		log.Event(context.Background() /*TODO - setting the context?*/, "unable to generate id", log.Error(err), log.ERROR)
 		return ""
 	}
 	return id.String()
