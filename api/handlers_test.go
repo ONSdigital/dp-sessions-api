@@ -47,12 +47,8 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		})
 	})
 
-	/*
 	Convey("Give a request to /session with a body with missing elements", t, func() {
-		sess := session.Session{
-			Email: "me@me.com",
-			Start: time.Now(),
-		}
+		sess := session.Session{}
 		sessJSON, _ := sess.MarshalJSON()
 
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
@@ -66,5 +62,4 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 			})
 		})
 	})
-	*/
 }
