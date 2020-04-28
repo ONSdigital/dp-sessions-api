@@ -3,7 +3,6 @@ package session
 import (
 	"context"
 	"encoding/json"
-	errs "github.com/ONSdigital/dp-sessions-api/apierrors"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/google/uuid"
 	"time"
@@ -52,14 +51,6 @@ func CreateNewSession(email string) Session {
 		Email: email,
 		Start: time.Now(),
 	}
-}
-
-// ValidateNewSessionDetails checks NewSessionDetails is valid
-func (c *NewSessionDetails) ValidateNewSessionDetails() error {
-	if len(c.Email) == 0 {
-		return errs.ErrMissingField
-	}
-	return nil
 }
 
 func newID() string {

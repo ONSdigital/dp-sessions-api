@@ -1,38 +1,52 @@
 package api
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/ONSdigital/dp-sessions-api/session"
 	. "github.com/smartystreets/goconvey/convey"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestCreateSessionHandlerFunc(t *testing.T) {
 
-	sessionHandler := CreateSessionHandlerFunc()
-
 	Convey("Given a request to /session with no body", t, func() {
+		mockSessions := &SessionsMock{}
+		sessionHandler := CreateSessionHandlerFunc(mockSessions)
+
 		req := httptest.NewRequest("POST", "http://localhost:24400/session", nil)
 		resp := httptest.NewRecorder()
 
 		Convey("When the request is handled by the router", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
-			Convey("Then the response should be a 400", func() {
-				So(resp.Code, ShouldEqual, 400)
+			Convey("Then return an error response", func() {
+				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(mockSessions.NewCalls(), ShouldHaveLength, 0)
 			})
 		})
 	})
 
-	Convey("Give a valid create session request to /session with body with all elements", t, func() {
-		sess := session.Session{
-			ID:    "123",
-			Email: "me@me.com",
-			Start: time.Now(),
+	Convey("Given a valid create session request to /session with body with all elements", t, func() {
+		mockSessions := &SessionsMock{
+			NewFunc: func(email string) (*session.Session, error) {
+				return &session.Session{
+					ID:    "1234",
+					Email: email,
+				}, nil
+			},
 		}
-		sessJSON, err := sess.MarshalJSON()
+		sessionHandler := CreateSessionHandlerFunc(mockSessions)
+
+		sess := session.NewSessionDetails{
+			Email: "test@test.com",
+		}
+		sessJSON, err := json.Marshal(sess)
+		So(err, ShouldBeNil)
 
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
 		resp := httptest.NewRecorder()
@@ -40,16 +54,48 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		Convey("When the request is handled by the router", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
-			Convey("Then the response should be 201", func() {
+			Convey("Then the expected success response is returned", func() {
 				So(resp.Code, ShouldEqual, 201)
-				So(err, ShouldBeNil)
+				So(resp.Header().Get("Content-Location"), ShouldEqual, fmt.Sprintf("/session/1234"))
+				So(mockSessions.NewCalls(), ShouldHaveLength, 1)
+				So(mockSessions.NewCalls()[0].Email, ShouldEqual, sess.Email)
 			})
 		})
 	})
 
-	Convey("Give a request to /session with a body with missing elements", t, func() {
-		sess := session.Session{}
-		sessJSON, _ := sess.MarshalJSON()
+	Convey("Given a bad request to /session", t, func() {
+		mockSessions := &SessionsMock{}
+		sessionHandler := CreateSessionHandlerFunc(mockSessions)
+
+		req := httptest.NewRequest("POST", "/session", strings.NewReader("this is not json"))
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is handled by the router", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then return an error response", func() {
+				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(mockSessions.NewCalls(), ShouldHaveLength, 0)
+			})
+		})
+	})
+
+	Convey("Given a request to /session with a body with missing elements", t, func() {
+		mockSessions := &SessionsMock{
+			NewFunc: func(email string) (*session.Session, error) {
+				return &session.Session{
+					ID:    "1234",
+					Email: "",
+				}, nil
+			},
+		}
+		sessionHandler := CreateSessionHandlerFunc(mockSessions)
+
+		sess := session.NewSessionDetails{
+			Email: "",
+		}
+		sessJSON, err := json.Marshal(sess)
+		So(err, ShouldBeNil)
 
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
 		resp := httptest.NewRecorder()
@@ -57,8 +103,36 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		Convey("When the request is handled by the router", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
-			Convey("Then the response should be 400", func() {
-				So(resp.Code, ShouldEqual, 400)
+			Convey("Then return an error response", func() {
+				So(resp.Code, ShouldEqual, http.StatusBadRequest)
+				So(mockSessions.NewCalls(), ShouldHaveLength, 0)
+			})
+		})
+	})
+
+	Convey("Given a valid create session request but UUID fails to generate", t, func() {
+		mockSessions := &SessionsMock{
+			NewFunc: func(email string) (*session.Session, error) {
+				return nil, errors.New("unable to generate id")
+			},
+		}
+		sessionHandler := CreateSessionHandlerFunc(mockSessions)
+
+		sess := session.NewSessionDetails{
+			Email: "test@test.com",
+		}
+		sessJSON, err := json.Marshal(sess)
+		So(err, ShouldBeNil)
+
+		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is handled by the router", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then return an error response", func() {
+				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(mockSessions.NewCalls(), ShouldHaveLength, 1)
 			})
 		})
 	})

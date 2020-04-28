@@ -16,7 +16,9 @@ func Setup(ctx context.Context, r *mux.Router) *API {
 		Router: r,
 	}
 
-	r.HandleFunc("/session", CreateSessionHandlerFunc()).Methods("POST")
+	nop := &NOPSessions{}
+
+	r.HandleFunc("/session", CreateSessionHandlerFunc(nop)).Methods("POST")
 	return api
 }
 
