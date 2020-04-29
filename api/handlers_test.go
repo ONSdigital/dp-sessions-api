@@ -25,7 +25,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then return an error response", func() {
-				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(resp.Code, ShouldEqual, http.StatusBadRequest)
 				So(mockSessions.NewCalls(), ShouldHaveLength, 0)
 			})
 		})
@@ -74,21 +74,14 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then return an error response", func() {
-				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(resp.Code, ShouldEqual, http.StatusBadRequest)
 				So(mockSessions.NewCalls(), ShouldHaveLength, 0)
 			})
 		})
 	})
 
 	Convey("Given a request to /session with a body with missing elements", t, func() {
-		mockSessions := &SessionsMock{
-			NewFunc: func(email string) (*session.Session, error) {
-				return &session.Session{
-					ID:    "1234",
-					Email: "",
-				}, nil
-			},
-		}
+		mockSessions := &SessionsMock{}
 		sessionHandler := CreateSessionHandlerFunc(mockSessions)
 
 		sess := session.NewSessionDetails{
@@ -110,7 +103,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		})
 	})
 
-	Convey("Given a valid create session request but UUID fails to generate", t, func() {
+	Convey("Given a create new session returns an error", t, func() {
 		mockSessions := &SessionsMock{
 			NewFunc: func(email string) (*session.Session, error) {
 				return nil, errors.New("unable to generate id")

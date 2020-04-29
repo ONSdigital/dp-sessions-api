@@ -1,9 +1,7 @@
 package session
 
 import (
-	"context"
 	"encoding/json"
-	"github.com/ONSdigital/log.go/log"
 	"github.com/google/uuid"
 	"time"
 )
@@ -45,19 +43,23 @@ func (sess *Session) MarshalJSON() ([]byte, error) {
 }
 
 // CreateNewSession creates a new session using email parameter
-func CreateNewSession(email string) Session {
+func CreateNewSession(email string) (Session, error) {
+	id, err := newID()
+	if err != nil {
+		return Session{}, err
+	}
+
 	return Session{
-		ID: newID(),
+		ID:    id,
 		Email: email,
 		Start: time.Now(),
-	}
+	}, nil
 }
 
-func newID() string {
+func newID() (string, error) {
 	id, err := uuid.NewUUID()
 	if err != nil {
-		log.Event(context.Background() /*TODO - setting the context?*/, "unable to generate id", log.Error(err), log.ERROR)
-		return ""
+		return "", err
 	}
-	return id.String()
+	return id.String(), nil
 }

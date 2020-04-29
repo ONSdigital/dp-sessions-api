@@ -10,6 +10,8 @@ import (
 	"net/http"
 )
 
+
+// Sessions interface for getting a new session
 type Sessions interface {
 	New(email string) (*session.Session, error)
 }
@@ -22,8 +24,8 @@ func CreateSessionHandlerFunc(sessions Sessions) http.HandlerFunc {
 		var c session.NewSessionDetails
 		err := json.NewDecoder(r.Body).Decode(&c)
 		if err != nil {
-			log.Event(ctx, "failed to unmarshal", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to unmarshal", http.StatusInternalServerError)
+			log.Event(ctx, "failed to unmarshal request body", log.Error(err), log.ERROR)
+			http.Error(w, "Failed to unmarshal request body", http.StatusBadRequest)
 			return
 		}
 
