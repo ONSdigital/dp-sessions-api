@@ -17,28 +17,34 @@ paths:
       tags:
         - session
       summary: Create a session endpoint
-      description: Creates a session and logs request back
+      description: Creates a new session for the provided user email.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: New session details
+          description: Creates a new session for the provided user email.
+          schema:
+            $ref: "#/definitions/NewSessionRequest"
       produces:
         - application/json
       responses:
         201:
           description: Created
-          schema:
-            $ref: "#/definitions/GoodCreateSessionRequest"
+          headers:
+            Content-Location:
+              type: string
+              description: The URI location of new session format "/session/{ID}"
         400:
           description: Bad Request
-          schema:
-            $ref: "#/definitions/BadCreateSessionRequest"
         500:
           description: Internal Server Error
 
 definitions:
-  GoodCreateSessionRequest:
+  NewSessionRequest:
     type: object
     properties:
       email:
         type: string
-        example: me@email.com
-  BadCreateSessionRequest:
-    type: object
+        example: user@email.com
     
