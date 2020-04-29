@@ -24,12 +24,21 @@ paths:
         201:
           description: Created
           schema:
-            $ref: "#/definitions/SessionResponse"
+            $ref: "#/definitions/GoodCreateSessionRequest"
         400:
           description: Bad Request
           schema:
-            $ref: "#/responses/BadRequest"
+            $ref: "#/definitions/BadCreateSessionRequest"
+        500:
+          description: Internal Server Error
 
-responses:
-  InternalError:
-    description: "Failed to process the request due to an internal error"
+definitions:
+  GoodCreateSessionRequest:
+    type: object
+    properties:
+      email:
+        type: string
+        example: me@email.com
+  BadCreateSessionRequest:
+    type: object
+    
