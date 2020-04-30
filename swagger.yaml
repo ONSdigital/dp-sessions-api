@@ -10,33 +10,41 @@ basePath: "/v1"
 schemes:
   - http
 tags:
-  - name: "hello"
+  - name: "session"
 paths:
-  /hello:
-    get:
+  /session:
+    post:
       tags:
-        - hello
-      summary: Example hello world endpoint
-      description: Returns an example payload.
+        - session
+      summary: Create a session endpoint
+      description: Creates a new session for the provided user email.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: New session details
+          description: Creates a new session for the provided user email.
+          schema:
+            $ref: "#/definitions/NewSessionRequest"
       produces:
         - application/json
       responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/HelloResponse"
+        201:
+          description: Created
+          headers:
+            Content-Location:
+              type: string
+              description: The URI location of new session format "/session/{ID}"
+        400:
+          description: Bad Request
         500:
-          $ref: '#/responses/InternalError'
-
-responses:
-  InternalError:
-    description: "Failed to process the request due to an internal error"
+          description: Internal Server Error
 
 definitions:
-  HelloResponse:
+  NewSessionRequest:
     type: object
     properties:
-      message:
+      email:
         type: string
-        description: "Message returned by hello world endpoint"
-        example: "Hello, world!"
+        example: user@email.com
+    

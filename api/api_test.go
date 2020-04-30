@@ -17,7 +17,7 @@ func TestSetup(t *testing.T) {
 
 		Convey("When created the following routes should have been added", func() {
 			// Replace the check below with any newly added api endpoints
-			So(hasRoute(api.Router, "/hello", "GET"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/session", "POST"), ShouldBeTrue)
 		})
 	})
 }

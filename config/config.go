@@ -23,10 +23,10 @@ func Get() (*Config, error) {
 	}
 
 	cfg := &Config{
-		BindAddr:                   ":",
+		BindAddr:                   ":24400",
 		GracefulShutdownTimeout:    5 * time.Second,
-		HealthCheckInterval:        10 * time.Second,
-		HealthCheckCriticalTimeout: time.Minute,
+		HealthCheckInterval:        30 * time.Second,
+		HealthCheckCriticalTimeout: 90 * time.Second,
 	}
 
 	return cfg, envconfig.Process("", cfg)
