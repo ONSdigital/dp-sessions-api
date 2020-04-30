@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/ONSdigital/dp-sessions-api/session"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
@@ -59,10 +58,18 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then the expected success response is returned", func() {
+				expected := &session.Session{
+					ID:    "1234",
+					Email: "test@test.com",
+					Start: currentTime,
+				}
+
+				b, err := json.Marshal(expected)
+				So(err, ShouldBeNil)
+				So(resp.Body.String(), ShouldEqual, string(b))
 				So(resp.Code, ShouldEqual, 201)
 				So(mockSessions.NewCalls(), ShouldHaveLength, 1)
 				So(mockSessions.NewCalls()[0].Email, ShouldEqual, "test@test.com")
-				So(resp.Body.String(), ShouldEqual, fmt.Sprintf(`{"id":"1234","email":"test@test.com","start":"%s"}`, currentTime.Format(dateTimeFMT)))
 			})
 		})
 	})
