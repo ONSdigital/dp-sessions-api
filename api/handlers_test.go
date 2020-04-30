@@ -10,6 +10,11 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
+)
+
+const (
+	dateTimeFMT = "2006-01-02T15:04:05.000Z"
 )
 
 func TestCreateSessionHandlerFunc(t *testing.T) {
@@ -32,11 +37,13 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a valid create session request to /session with body with all elements", t, func() {
+		currentTime := time.Now()
 		mockSessions := &SessionsMock{
 			NewFunc: func(email string) (*session.Session, error) {
 				return &session.Session{
 					ID:    "1234",
 					Email: email,
+					Start: currentTime,
 				}, nil
 			},
 		}
@@ -53,9 +60,9 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 			Convey("Then the expected success response is returned", func() {
 				So(resp.Code, ShouldEqual, 201)
-				So(resp.Header().Get("Content-Location"), ShouldEqual, fmt.Sprintf("/session/1234"))
 				So(mockSessions.NewCalls(), ShouldHaveLength, 1)
 				So(mockSessions.NewCalls()[0].Email, ShouldEqual, "test@test.com")
+				So(resp.Body.String(), ShouldEqual, fmt.Sprintf(`{"id":"1234","email":"test@test.com","start":"%s"}`, currentTime.Format(dateTimeFMT)))
 			})
 		})
 	})

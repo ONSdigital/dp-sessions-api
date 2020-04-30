@@ -4,7 +4,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/ONSdigital/dp-sessions-api/session"
 	"github.com/ONSdigital/log.go/log"
 	"net/http"
@@ -44,8 +43,15 @@ func CreateSessionHandlerFunc(sessions Sessions) http.HandlerFunc {
 
 		log.Event(ctx, "session created", log.Data{"session": sess}, log.INFO)
 
+		sessJson, err := sess.MarshalJSON()
+		if err != nil {
+			log.Event(ctx, "failed to marshal session", log.Error(err), log.ERROR)
+			http.Error(w, "Failed to marshal session", http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Content-Location", fmt.Sprintf("/session/%s", sess.ID))
 		w.WriteHeader(http.StatusCreated)
+		w.Write(sessJson)
 	}
 }
