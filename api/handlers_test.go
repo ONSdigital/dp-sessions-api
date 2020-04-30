@@ -42,10 +42,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		}
 		sessionHandler := CreateSessionHandlerFunc(mockSessions)
 
-		sess := session.NewSessionDetails{
-			Email: "test@test.com",
-		}
-		sessJSON, err := json.Marshal(sess)
+		sessJSON, err := newSessionDetailsAndMarshal("test@test.com")
 		So(err, ShouldBeNil)
 
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
@@ -58,7 +55,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 				So(resp.Code, ShouldEqual, 201)
 				So(resp.Header().Get("Content-Location"), ShouldEqual, fmt.Sprintf("/session/1234"))
 				So(mockSessions.NewCalls(), ShouldHaveLength, 1)
-				So(mockSessions.NewCalls()[0].Email, ShouldEqual, sess.Email)
+				So(mockSessions.NewCalls()[0].Email, ShouldEqual, "test@test.com")
 			})
 		})
 	})
@@ -84,10 +81,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		mockSessions := &SessionsMock{}
 		sessionHandler := CreateSessionHandlerFunc(mockSessions)
 
-		sess := session.NewSessionDetails{
-			Email: "",
-		}
-		sessJSON, err := json.Marshal(sess)
+		sessJSON, err := newSessionDetailsAndMarshal("")
 		So(err, ShouldBeNil)
 
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
@@ -111,10 +105,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		}
 		sessionHandler := CreateSessionHandlerFunc(mockSessions)
 
-		sess := session.NewSessionDetails{
-			Email: "test@test.com",
-		}
-		sessJSON, err := json.Marshal(sess)
+		sessJSON, err := newSessionDetailsAndMarshal("test@test.com")
 		So(err, ShouldBeNil)
 
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
@@ -129,4 +120,16 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 			})
 		})
 	})
+}
+
+func newSessionDetailsAndMarshal(email string) ([]byte, error) {
+	sess := session.NewSessionDetails{
+		Email: email,
+	}
+	sessJSON, err := json.Marshal(sess)
+	if err != nil {
+		return nil, err
+	}
+
+	return sessJSON, nil
 }
