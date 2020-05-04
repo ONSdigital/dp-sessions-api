@@ -153,7 +153,7 @@ func TestGetSessionHandlerFunc(t *testing.T) {
 		}
 		sessionHandler := GetSessionHandlerFunc(mockCache)
 
-		req := httptest.NewRequest("GET", "/session/{email}", nil)
+		req := httptest.NewRequest("GET", "/session/123", nil)
 		resp := httptest.NewRecorder()
 
 		Convey("When the request is handled by the router", func() {
@@ -162,6 +162,7 @@ func TestGetSessionHandlerFunc(t *testing.T) {
 			Convey("Then the correct session details", func() {
 				So(resp.Code, ShouldEqual, http.StatusOK)
 				So(mockCache.GetCalls(), ShouldHaveLength, 1)
+				So(mockCache.GetCalls()[0].ID, ShouldEqual, "123")
 			})
 		})
 	})

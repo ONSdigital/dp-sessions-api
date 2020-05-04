@@ -30,15 +30,15 @@ func (c *Cache) Set(s *session.Session) {
 	c.store[s.ID] = s
 }
 
-func (c *Cache) Get(email string) (*session.Session, error) {
+func (c *Cache) Get(ID string) (*session.Session, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	findByEmail := func(s *session.Session) bool {
-		return s.Email == email
+	findByID := func(s *session.Session) bool {
+		return s.ID == ID
 	}
 
-	s := c.findSessionBy(findByEmail)
+	s := c.findSessionBy(findByID)
 	if s == nil {
 		return nil, nil
 	}

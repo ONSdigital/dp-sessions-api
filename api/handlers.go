@@ -21,7 +21,7 @@ type Sessions interface {
 // Cache interface for storing sessions
 type Cache interface {
 	Set(s *session.Session)
-	Get(email string) (*session.Session, error)
+	Get(ID string) (*session.Session, error)
 }
 
 // CreateSessionHandlerFunc returns a function that generates a session. Method = "POST"
@@ -74,11 +74,11 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 func GetSessionHandlerFunc(cache Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		email := mux.Vars(r)["email"]
+		ID := mux.Vars(r)["ID"]
 
-		log.Event(ctx, fmt.Sprintf("get session by email: %s", email), log.INFO)
+		log.Event(ctx, fmt.Sprintf("get session by ID: %s", ID), log.INFO)
 
-		result, err := cache.Get(email)
+		result, err := cache.Get(ID)
 		if err != nil {
 			return
 		}

@@ -23,7 +23,7 @@ var _ Cache = &CacheMock{}
 //
 //         // make and configure a mocked Cache
 //         mockedCache := &CacheMock{
-//             GetFunc: func(email string) (*session.Session, error) {
+//             GetFunc: func(ID string) (*session.Session, error) {
 // 	               panic("mock out the Get method")
 //             },
 //             SetFunc: func(s *session.Session)  {
@@ -37,7 +37,7 @@ var _ Cache = &CacheMock{}
 //     }
 type CacheMock struct {
 	// GetFunc mocks the Get method.
-	GetFunc func(email string) (*session.Session, error)
+	GetFunc func(ID string) (*session.Session, error)
 
 	// SetFunc mocks the Set method.
 	SetFunc func(s *session.Session)
@@ -46,8 +46,8 @@ type CacheMock struct {
 	calls struct {
 		// Get holds details about calls to the Get method.
 		Get []struct {
-			// Email is the email argument value.
-			Email string
+			// ID is the ID argument value.
+			ID string
 		}
 		// Set holds details about calls to the Set method.
 		Set []struct {
@@ -58,29 +58,29 @@ type CacheMock struct {
 }
 
 // Get calls GetFunc.
-func (mock *CacheMock) Get(email string) (*session.Session, error) {
+func (mock *CacheMock) Get(ID string) (*session.Session, error) {
 	if mock.GetFunc == nil {
 		panic("CacheMock.GetFunc: method is nil but Cache.Get was just called")
 	}
 	callInfo := struct {
-		Email string
+		ID string
 	}{
-		Email: email,
+		ID: ID,
 	}
 	lockCacheMockGet.Lock()
 	mock.calls.Get = append(mock.calls.Get, callInfo)
 	lockCacheMockGet.Unlock()
-	return mock.GetFunc(email)
+	return mock.GetFunc(ID)
 }
 
 // GetCalls gets all the calls that were made to Get.
 // Check the length with:
 //     len(mockedCache.GetCalls())
 func (mock *CacheMock) GetCalls() []struct {
-	Email string
+	ID string
 } {
 	var calls []struct {
-		Email string
+		ID string
 	}
 	lockCacheMockGet.RLock()
 	calls = mock.calls.Get
