@@ -3,10 +3,9 @@ package api
 import (
 	"context"
 	"github.com/gorilla/mux"
+	. "github.com/smartystreets/goconvey/convey"
 	"net/http/httptest"
 	"testing"
-
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSetup(t *testing.T) {
@@ -18,6 +17,7 @@ func TestSetup(t *testing.T) {
 		Convey("When created the following routes should have been added", func() {
 			// Replace the check below with any newly added api endpoints
 			So(hasRoute(api.Router, "/session", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/session/{email}", "GET"), ShouldBeTrue)
 		})
 	})
 }

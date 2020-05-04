@@ -16,9 +16,11 @@ func Setup(ctx context.Context, r *mux.Router) *API {
 		Router: r,
 	}
 
-	nop := &NOPSessions{}
+	nopSess := &NOPSessions{}
+	nopCache := &NOPCache{}
 
-	r.HandleFunc("/session", CreateSessionHandlerFunc(nop)).Methods("POST")
+	r.HandleFunc("/session", CreateSessionHandlerFunc(nopSess, nopCache)).Methods("POST")
+	r.HandleFunc("/session/{email}", GetSessionHandlerFunc(nopCache)).Methods("GET")
 	return api
 }
 
