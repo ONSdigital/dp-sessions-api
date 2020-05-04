@@ -6,10 +6,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/ONSdigital/dp-sessions-api/session"
 	"github.com/ONSdigital/log.go/log"
-	"github.com/gorilla/mux"
-	"net/http"
 )
 
 
@@ -23,6 +23,9 @@ type Cache interface {
 	Set(s *session.Session)
 	Get(ID string) (*session.Session, error)
 }
+
+// GetVarsFunc is a helper function that returns a map of request variables and parameters
+type GetVarsFunc func(r *http.Request) map[string]string
 
 // CreateSessionHandlerFunc returns a function that generates a session. Method = "POST"
 func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
@@ -71,10 +74,10 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 	}
 }
 
-func GetSessionHandlerFunc(cache Cache) http.HandlerFunc {
+func GetSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		ID := mux.Vars(r)["ID"]
+		ID := getVarsFunc(r)["ID"]
 
 		log.Event(ctx, fmt.Sprintf("get session by ID: %s", ID), log.INFO)
 

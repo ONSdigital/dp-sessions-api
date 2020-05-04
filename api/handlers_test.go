@@ -141,6 +141,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 func TestGetSessionHandlerFunc(t *testing.T) {
 	Convey("Given a request to retrieve a stored session", t, func() {
+		sessionID := "123"
 		currentTime := time.Now()
 		mockCache := &CacheMock{
 			GetFunc: func(email string) (*session.Session, error) {
@@ -151,7 +152,15 @@ func TestGetSessionHandlerFunc(t *testing.T) {
 				}, nil
 			},
 		}
-		sessionHandler := GetSessionHandlerFunc(mockCache)
+
+
+		getVars := func(r *http.Request)map[string]string {
+			return map[string]string{
+				"ID": sessionID,
+			}
+		}
+
+		sessionHandler := GetSessionHandlerFunc(mockCache, getVars)
 
 		req := httptest.NewRequest("GET", "/session/123", nil)
 		resp := httptest.NewRecorder()
