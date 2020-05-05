@@ -13,7 +13,7 @@ import (
 )
 
 func TestCreateSessionHandlerFunc(t *testing.T) {
-	Convey("Given a request to /session with no body", t, func() {
+	Convey("Given a valid request", t, func() {
 		mockSessions := &SessionsMock{}
 		mockCache := &CacheMock{}
 		sessionHandler := CreateSessionHandlerFunc(mockSessions, mockCache)
@@ -21,7 +21,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		req := httptest.NewRequest("POST", "http://localhost:24400/session", nil)
 		resp := httptest.NewRecorder()
 
-		Convey("When the request is handled by the router", func() {
+		Convey("When the request is received", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then return an error response", func() {
@@ -31,7 +31,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		})
 	})
 
-	Convey("Given a valid create session request to /session with body with all elements", t, func() {
+	Convey("Given a valid request", t, func() {
 		currentTime := time.Now()
 		mockSessions := &SessionsMock{
 			NewFunc: func(email string) (*session.Session, error) {
@@ -53,7 +53,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
 		resp := httptest.NewRecorder()
 
-		Convey("When the request is handled by the router", func() {
+		Convey("When the request is received", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then the expected success response is returned", func() {
@@ -74,7 +74,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		})
 	})
 
-	Convey("Given a bad request to /session", t, func() {
+	Convey("Given a bad request", t, func() {
 		mockSessions := &SessionsMock{}
 		mockCache := &CacheMock{}
 		sessionHandler := CreateSessionHandlerFunc(mockSessions, mockCache)
@@ -82,7 +82,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		req := httptest.NewRequest("POST", "/session", strings.NewReader("this is not json"))
 		resp := httptest.NewRecorder()
 
-		Convey("When the request is handled by the router", func() {
+		Convey("When the request is received", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then return an error response", func() {
@@ -92,7 +92,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		})
 	})
 
-	Convey("Given a request to /session with a body with missing elements", t, func() {
+	Convey("Given a bad request", t, func() {
 		mockSessions := &SessionsMock{}
 		mockCache := &CacheMock{}
 		sessionHandler := CreateSessionHandlerFunc(mockSessions, mockCache)
@@ -103,7 +103,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
 		resp := httptest.NewRecorder()
 
-		Convey("When the request is handled by the router", func() {
+		Convey("When the request is received", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then return an error response", func() {
@@ -113,7 +113,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		})
 	})
 
-	Convey("Given a create new session returns an error", t, func() {
+	Convey("Given a new session", t, func() {
 		mockSessions := &SessionsMock{
 			NewFunc: func(email string) (*session.Session, error) {
 				return nil, errors.New("unable to generate id")
@@ -128,7 +128,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		req := httptest.NewRequest("POST", "/session", strings.NewReader(string(sessJSON)))
 		resp := httptest.NewRecorder()
 
-		Convey("When the request is handled by the router", func() {
+		Convey("When the request is received", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then return an error response", func() {
@@ -140,7 +140,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 }
 
 func TestGetByIDSessionHandlerFunc(t *testing.T) {
-	Convey("Given a request to retrieve a stored session", t, func() {
+	Convey("Given a valid request", t, func() {
 		sessionID := "123"
 		currentTime := time.Now()
 		mockCache := &CacheMock{
@@ -164,10 +164,10 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 		req := httptest.NewRequest("GET", "/session/123", nil)
 		resp := httptest.NewRecorder()
 
-		Convey("When the request is handled by the router", func() {
+		Convey("When the request is received", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
-			Convey("Then the correct session details", func() {
+			Convey("Then expected session is returned", func() {
 				So(resp.Code, ShouldEqual, http.StatusOK)
 				So(mockCache.GetByIDCalls(), ShouldHaveLength, 1)
 				So(mockCache.GetByIDCalls()[0].ID, ShouldEqual, "123")
@@ -175,7 +175,7 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 		})
 	})
 
-	Convey("Given a request to retrieve a stored session with an invalid ID", t, func() {
+	Convey("Given a request to retrieve a session", t, func() {
 		mockCache := &CacheMock{
 			GetByIDFunc: func(ID string) (*session.Session, error) {
 				return nil, errors.New("unable to get session by id")
@@ -187,11 +187,11 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 		req := httptest.NewRequest("GET", "/session/123", nil)
 		resp := httptest.NewRecorder()
 
-		Convey("When the request is handled by the router", func() {
+		Convey("When the request is received", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then an error response is returned", func() {
-				So(resp.Code, ShouldEqual, http.StatusBadRequest)
+				So(resp.Code, ShouldEqual, http.StatusNotFound)
 				So(mockCache.GetByIDCalls(), ShouldHaveLength, 1)
 			})
 		})

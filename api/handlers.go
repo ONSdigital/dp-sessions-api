@@ -6,7 +6,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/ONSdigital/dp-sessions-api/session"
@@ -81,12 +80,10 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 		ctx := r.Context()
 		ID := getVarsFunc(r)["ID"]
 
-		log.Event(ctx, fmt.Sprintf("get session by ID: %s", ID), log.INFO)
-
 		result, err := cache.GetByID(ID)
 		if err != nil {
 			log.Event(ctx,"unable to get session by id", log.Error(err), log.ERROR)
-			http.Error(w, "Unable to get session by id", http.StatusBadRequest)
+			http.Error(w, "Unable to get session by id", http.StatusNotFound)
 			return
 		}
 
