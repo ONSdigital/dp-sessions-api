@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"github.com/ONSdigital/dp-sessions-api/session"
 	"github.com/ONSdigital/log.go/log"
 	"sync"
@@ -45,7 +46,7 @@ func (c *Cache) GetByID(ID string) (*session.Session, error) {
 
 	s := c.findSessionBy(findByID)
 	if s == nil {
-		return nil, nil
+		return nil, errors.New("unable to get session by id")
 	}
 
 	return s, nil

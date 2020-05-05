@@ -20,7 +20,7 @@ type Sessions interface {
 
 // Cache interface for storing and retrieving sessions
 type Cache interface {
-	Set(s *session.Session)
+	Set(s *session.Session) error
 	GetByID(ID string) (*session.Session, error)
 }
 
@@ -60,7 +60,10 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 			Start: sess.Start,
 		}
 
-		cache.Set(s)
+		if err := cache.Set(s); err != nil {
+			log.Event(ctx, "unable to add session to cache", log.Error(err), log.ERROR)
+			http.Error(w, "unable to add session to cache", http.StatusInternalServerError)
+		}
 		log.Event(ctx, "session added to cache", log.INFO)
 
 		sessJSON, err := sess.MarshalJSON()

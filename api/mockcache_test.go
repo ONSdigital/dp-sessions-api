@@ -26,7 +26,7 @@ var _ Cache = &CacheMock{}
 //             GetByIDFunc: func(ID string) (*session.Session, error) {
 // 	               panic("mock out the GetByID method")
 //             },
-//             SetFunc: func(s *session.Session)  {
+//             SetFunc: func(s *session.Session) error {
 // 	               panic("mock out the Set method")
 //             },
 //         }
@@ -40,7 +40,7 @@ type CacheMock struct {
 	GetByIDFunc func(ID string) (*session.Session, error)
 
 	// SetFunc mocks the Set method.
-	SetFunc func(s *session.Session)
+	SetFunc func(s *session.Session) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -89,7 +89,7 @@ func (mock *CacheMock) GetByIDCalls() []struct {
 }
 
 // Set calls SetFunc.
-func (mock *CacheMock) Set(s *session.Session) {
+func (mock *CacheMock) Set(s *session.Session) error {
 	if mock.SetFunc == nil {
 		panic("CacheMock.SetFunc: method is nil but Cache.Set was just called")
 	}
@@ -101,7 +101,7 @@ func (mock *CacheMock) Set(s *session.Session) {
 	lockCacheMockSet.Lock()
 	mock.calls.Set = append(mock.calls.Set, callInfo)
 	lockCacheMockSet.Unlock()
-	mock.SetFunc(s)
+	return mock.SetFunc(s)
 }
 
 // SetCalls gets all the calls that were made to Set.
