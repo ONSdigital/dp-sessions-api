@@ -190,7 +190,7 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 			},
 		}
 
-		getVars := func(r *http.Request)map[string]string {
+		getVars := func(r *http.Request) map[string]string {
 			return map[string]string{
 				"ID": sessionID,
 			}
@@ -220,6 +220,28 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 		}
 
 		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars("ID", ""))
+
+		req := httptest.NewRequest("GET", "/session/123", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is received", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then an error response is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(mockCache.GetByIDCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
+
+	Convey("Given a valid request", t, func() {
+		mockCache := &CacheMock{
+			GetByIDFunc: func(ID string) (*session.Session, error) {
+				return nil, nil
+			},
+		}
+
+		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars("ID", "123"))
 
 		req := httptest.NewRequest("GET", "/session/123", nil)
 		resp := httptest.NewRecorder()

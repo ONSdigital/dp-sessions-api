@@ -3,7 +3,6 @@ package cache
 import (
 	"errors"
 	"github.com/ONSdigital/dp-sessions-api/session"
-	"github.com/ONSdigital/log.go/log"
 	"sync"
 	"time"
 )
@@ -30,7 +29,6 @@ func NewCache(interval time.Duration, ttl time.Duration) *Cache {
 func (c *Cache) Set(s *session.Session) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	log.Event(nil, "adding session to cache")
 	c.store[s.ID] = s
 }
 

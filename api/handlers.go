@@ -63,6 +63,7 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 		if err := cache.Set(s); err != nil {
 			log.Event(ctx, "unable to add session to cache", log.Error(err), log.ERROR)
 			http.Error(w, "unable to add session to cache", http.StatusInternalServerError)
+			return
 		}
 		log.Event(ctx, "session added to cache", log.INFO)
 
@@ -86,7 +87,13 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 		result, err := cache.GetByID(ID)
 		if err != nil {
 			log.Event(ctx,"unable to get session by id", log.Error(err), log.ERROR)
-			http.Error(w, "Unable to get session by id", http.StatusNotFound)
+			http.Error(w, "Unable to get session by id", http.StatusInternalServerError)
+			return
+		}
+
+		if result == nil {
+			log.Event(ctx,"session not found", log.ERROR)
+			http.Error(w, "session not found", http.StatusNotFound)
 			return
 		}
 
