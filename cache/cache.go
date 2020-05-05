@@ -9,12 +9,14 @@ import (
 
 var mutex = &sync.Mutex{}
 
+// Cache defines the structure required for a cache
 type Cache struct {
 	ttl      time.Duration
 	interval time.Duration
 	store    map[string]*session.Session
 }
 
+// NewCache creates a new cache
 func NewCache(interval time.Duration, ttl time.Duration) *Cache {
 	return &Cache{
 		ttl:      ttl,
@@ -23,6 +25,7 @@ func NewCache(interval time.Duration, ttl time.Duration) *Cache {
 	}
 }
 
+// Set stores a session into the cache
 func (c *Cache) Set(s *session.Session) {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -30,6 +33,8 @@ func (c *Cache) Set(s *session.Session) {
 	c.store[s.ID] = s
 }
 
+
+// GetByID retrieves a session from the cache by ID
 func (c *Cache) GetByID(ID string) (*session.Session, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
