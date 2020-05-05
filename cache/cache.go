@@ -30,7 +30,7 @@ func (c *Cache) Set(s *session.Session) {
 	c.store[s.ID] = s
 }
 
-func (c *Cache) Get(ID string) (*session.Session, error) {
+func (c *Cache) GetByID(ID string) (*session.Session, error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 

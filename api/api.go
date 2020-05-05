@@ -20,7 +20,7 @@ func Setup(ctx context.Context, r *mux.Router) *API {
 	nopCache := &NOPCache{}
 
 	r.HandleFunc("/session", CreateSessionHandlerFunc(nopSess, nopCache)).Methods("POST")
-	r.HandleFunc("/session/{ID}", GetSessionHandlerFunc(nopCache, mux.Vars)).Methods("GET")
+	r.HandleFunc("/session/{ID}", GetByIDSessionHandlerFunc(nopCache, mux.Vars)).Methods("GET")
 	return api
 }
 

@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	lockCacheMockGet sync.RWMutex
-	lockCacheMockSet sync.RWMutex
+	lockCacheMockGetByID sync.RWMutex
+	lockCacheMockSet     sync.RWMutex
 )
 
 // Ensure, that CacheMock does implement Cache.
@@ -23,8 +23,8 @@ var _ Cache = &CacheMock{}
 //
 //         // make and configure a mocked Cache
 //         mockedCache := &CacheMock{
-//             GetFunc: func(ID string) (*session.Session, error) {
-// 	               panic("mock out the Get method")
+//             GetByIDFunc: func(ID string) (*session.Session, error) {
+// 	               panic("mock out the GetByID method")
 //             },
 //             SetFunc: func(s *session.Session)  {
 // 	               panic("mock out the Set method")
@@ -36,16 +36,16 @@ var _ Cache = &CacheMock{}
 //
 //     }
 type CacheMock struct {
-	// GetFunc mocks the Get method.
-	GetFunc func(ID string) (*session.Session, error)
+	// GetByIDFunc mocks the GetByID method.
+	GetByIDFunc func(ID string) (*session.Session, error)
 
 	// SetFunc mocks the Set method.
 	SetFunc func(s *session.Session)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// Get holds details about calls to the Get method.
-		Get []struct {
+		// GetByID holds details about calls to the GetByID method.
+		GetByID []struct {
 			// ID is the ID argument value.
 			ID string
 		}
@@ -57,34 +57,34 @@ type CacheMock struct {
 	}
 }
 
-// Get calls GetFunc.
-func (mock *CacheMock) Get(ID string) (*session.Session, error) {
-	if mock.GetFunc == nil {
-		panic("CacheMock.GetFunc: method is nil but Cache.Get was just called")
+// GetByID calls GetByIDFunc.
+func (mock *CacheMock) GetByID(ID string) (*session.Session, error) {
+	if mock.GetByIDFunc == nil {
+		panic("CacheMock.GetByIDFunc: method is nil but Cache.GetByID was just called")
 	}
 	callInfo := struct {
 		ID string
 	}{
 		ID: ID,
 	}
-	lockCacheMockGet.Lock()
-	mock.calls.Get = append(mock.calls.Get, callInfo)
-	lockCacheMockGet.Unlock()
-	return mock.GetFunc(ID)
+	lockCacheMockGetByID.Lock()
+	mock.calls.GetByID = append(mock.calls.GetByID, callInfo)
+	lockCacheMockGetByID.Unlock()
+	return mock.GetByIDFunc(ID)
 }
 
-// GetCalls gets all the calls that were made to Get.
+// GetByIDCalls gets all the calls that were made to GetByID.
 // Check the length with:
-//     len(mockedCache.GetCalls())
-func (mock *CacheMock) GetCalls() []struct {
+//     len(mockedCache.GetByIDCalls())
+func (mock *CacheMock) GetByIDCalls() []struct {
 	ID string
 } {
 	var calls []struct {
 		ID string
 	}
-	lockCacheMockGet.RLock()
-	calls = mock.calls.Get
-	lockCacheMockGet.RUnlock()
+	lockCacheMockGetByID.RLock()
+	calls = mock.calls.GetByID
+	lockCacheMockGetByID.RUnlock()
 	return calls
 }
 

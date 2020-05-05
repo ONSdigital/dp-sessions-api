@@ -26,7 +26,7 @@ func (n *NOPSessions) New(email string) (*session.Session, error) {
 
 func (n *NOPCache) Set(s *session.Session) {}
 
-func (n *NOPCache) Get(ID string) (*session.Session, error) {
+func (n *NOPCache) GetByID(ID string) (*session.Session, error) {
 	startP := parseTime()
 	return &session.Session{
 		ID:    ID,

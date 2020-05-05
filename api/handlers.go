@@ -4,6 +4,7 @@ package api
 //go:generate moq -out mockcache_test.go . Cache
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -18,10 +19,10 @@ type Sessions interface {
 	New(email string) (*session.Session, error)
 }
 
-// Cache interface for storing sessions
+// Cache interface for storing and retrieving sessions
 type Cache interface {
 	Set(s *session.Session)
-	Get(ID string) (*session.Session, error)
+	GetByID(ID string) (*session.Session, error)
 }
 
 // GetVarsFunc is a helper function that returns a map of request variables and parameters
@@ -59,12 +60,13 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 			Email: sess.Email,
 			Start: sess.Start,
 		}
+
 		cache.Set(s)
+		log.Event(ctx, "session added to cache", log.INFO)
 
 		sessJSON, err := sess.MarshalJSON()
 		if err != nil {
-			log.Event(ctx, "failed to marshal session", log.Error(err), log.ERROR)
-			http.Error(w, "Failed to marshal session", http.StatusInternalServerError)
+			failedToMarshalError(ctx, err, w)
 			return
 		}
 
@@ -74,20 +76,23 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 	}
 }
 
-func GetSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
+func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		ID := getVarsFunc(r)["ID"]
 
 		log.Event(ctx, fmt.Sprintf("get session by ID: %s", ID), log.INFO)
 
-		result, err := cache.Get(ID)
+		result, err := cache.GetByID(ID)
 		if err != nil {
+			log.Event(ctx,"unable to get session by id", log.Error(err), log.ERROR)
+			http.Error(w, "Unable to get session by id", http.StatusBadRequest)
 			return
 		}
 
 		resultJSON, err := result.MarshalJSON()
 		if err != nil {
+			failedToMarshalError(ctx, err, w)
 			return
 		}
 
@@ -95,4 +100,9 @@ func GetSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.HandlerFun
 		w.WriteHeader(http.StatusOK)
 		w.Write(resultJSON)
 	}
+}
+
+func failedToMarshalError(ctx context.Context, err error, w http.ResponseWriter) {
+	log.Event(ctx, "failed to marshal session", log.Error(err), log.ERROR)
+	http.Error(w, "Failed to marshal session", http.StatusInternalServerError)
 }

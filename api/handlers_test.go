@@ -139,12 +139,12 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 	})
 }
 
-func TestGetSessionHandlerFunc(t *testing.T) {
+func TestGetByIDSessionHandlerFunc(t *testing.T) {
 	Convey("Given a request to retrieve a stored session", t, func() {
 		sessionID := "123"
 		currentTime := time.Now()
 		mockCache := &CacheMock{
-			GetFunc: func(email string) (*session.Session, error) {
+			GetByIDFunc: func(email string) (*session.Session, error) {
 				return &session.Session{
 					ID:    "123",
 					Email: email,
@@ -153,14 +153,13 @@ func TestGetSessionHandlerFunc(t *testing.T) {
 			},
 		}
 
-
 		getVars := func(r *http.Request)map[string]string {
 			return map[string]string{
 				"ID": sessionID,
 			}
 		}
 
-		sessionHandler := GetSessionHandlerFunc(mockCache, getVars)
+		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars)
 
 		req := httptest.NewRequest("GET", "/session/123", nil)
 		resp := httptest.NewRecorder()
@@ -170,8 +169,30 @@ func TestGetSessionHandlerFunc(t *testing.T) {
 
 			Convey("Then the correct session details", func() {
 				So(resp.Code, ShouldEqual, http.StatusOK)
-				So(mockCache.GetCalls(), ShouldHaveLength, 1)
-				So(mockCache.GetCalls()[0].ID, ShouldEqual, "123")
+				So(mockCache.GetByIDCalls(), ShouldHaveLength, 1)
+				So(mockCache.GetByIDCalls()[0].ID, ShouldEqual, "123")
+			})
+		})
+	})
+
+	Convey("Given a request to retrieve a stored session with an invalid ID", t, func() {
+		mockCache := &CacheMock{
+			GetByIDFunc: func(ID string) (*session.Session, error) {
+				return nil, errors.New("unable to get session by id")
+			},
+		}
+
+		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars("ID", ""))
+
+		req := httptest.NewRequest("GET", "/session/123", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is handled by the router", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then an error response is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusBadRequest)
+				So(mockCache.GetByIDCalls(), ShouldHaveLength, 1)
 			})
 		})
 	})
@@ -187,4 +208,12 @@ func newSessionDetailsAndMarshal(email string) ([]byte, error) {
 	}
 
 	return sessJSON, nil
+}
+
+func getVars(k string, v string) GetVarsFunc {
+	return func(r *http.Request) map[string]string {
+		return map[string]string{
+			k: v,
+		}
+	}
 }
