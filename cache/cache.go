@@ -26,6 +26,7 @@ func NewCache(interval time.Duration, ttl time.Duration) *Cache {
 }
 
 // Set stores a session into the cache
+// error could be returned when using redis
 func (c *Cache) Set(s *session.Session) error {
 	mutex.Lock()
 	defer mutex.Unlock()
