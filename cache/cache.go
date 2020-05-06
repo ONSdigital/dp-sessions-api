@@ -26,10 +26,11 @@ func NewCache(interval time.Duration, ttl time.Duration) *Cache {
 }
 
 // Set stores a session into the cache
-func (c *Cache) Set(s *session.Session) {
+func (c *Cache) Set(s *session.Session) error {
 	mutex.Lock()
 	defer mutex.Unlock()
 	c.store[s.ID] = s
+	return nil
 }
 
 
