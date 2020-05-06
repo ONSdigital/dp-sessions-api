@@ -50,7 +50,6 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 			return
 		}
 
-		log.Event(ctx, "session created", log.Data{"session": sess}, log.INFO)
 		s := &session.Session{
 			ID:    sess.ID,
 			Email: sess.Email,
@@ -61,7 +60,6 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 			writeErrorResponse(ctx, w, "unable to add session to cache", err, http.StatusInternalServerError)
 			return
 		}
-		log.Event(ctx, "session added to cache", log.INFO)
 
 		sessJSON, err := sess.MarshalJSON()
 		if err != nil {
@@ -106,7 +104,9 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 func writeErrorResponse(ctx context.Context, w http.ResponseWriter, msg string, err error, status int) {
 	if err != nil {
 		log.Event(ctx, msg, log.Error(err), log.ERROR)
+	} else {
+		log.Event(ctx, msg, log.ERROR)
 	}
-	log.Event(ctx, msg, log.ERROR)
 	http.Error(w, msg, status)
+
 }
