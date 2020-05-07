@@ -10,10 +10,13 @@ const (
 	NOPStart     = "Mon Jan _2 15:04:05 2006"
 )
 
+// NOPSessions no-op struct
 type NOPSessions struct{}
 
+// NOPCache no-op struct
 type NOPCache struct{}
 
+// New creates a new session using an email address
 func (n *NOPSessions) New(email string) (*session.Session, error) {
 	startP := parseTime()
 	var sess = &session.Session{
@@ -24,10 +27,12 @@ func (n *NOPSessions) New(email string) (*session.Session, error) {
 	return sess, nil
 }
 
+// Set stores a session into the cache
 func (n *NOPCache) Set(s *session.Session) error {
 	return nil
 }
 
+// GetByID retrieves a session from the cache by ID
 func (n *NOPCache) GetByID(ID string) (*session.Session, error) {
 	startP := parseTime()
 	return &session.Session{

@@ -73,6 +73,7 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 	}
 }
 
+// GetByIDSessionHandlerFunc returns a function that retrieves a session by ID from the cache
 func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -108,5 +109,4 @@ func writeErrorResponse(ctx context.Context, w http.ResponseWriter, msg string, 
 		log.Event(ctx, msg, log.ERROR)
 	}
 	http.Error(w, msg, status)
-
 }

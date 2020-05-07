@@ -2,10 +2,11 @@ package api
 
 import (
 	"context"
-	"github.com/gorilla/mux"
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/mux"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSetup(t *testing.T) {
