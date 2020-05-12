@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	. "github.com/ONSdigital/dp-sessions-api/errors"
 	"github.com/ONSdigital/dp-sessions-api/session"
 	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
@@ -215,7 +216,7 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 	Convey("Given a request to retrieve a session", t, func() {
 		mockCache := &CacheMock{
 			GetByIDFunc: func(ID string) (*session.Session, error) {
-				return nil, errors.New("unable to get session by id")
+				return nil, SessionNotFound
 			},
 		}
 
@@ -228,7 +229,7 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then an error response is returned", func() {
-				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(resp.Code, ShouldEqual, http.StatusNotFound)
 				So(mockCache.GetByIDCalls(), ShouldHaveLength, 1)
 			})
 		})
@@ -238,6 +239,28 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 		mockCache := &CacheMock{
 			GetByIDFunc: func(ID string) (*session.Session, error) {
 				return nil, nil
+			},
+		}
+
+		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars("ID", "123"))
+
+		req := httptest.NewRequest("GET", "/session/123", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is received", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then an error response is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusNotFound)
+				So(mockCache.GetByIDCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
+
+	Convey("Given a valid request", t, func() {
+		mockCache := &CacheMock{
+			GetByIDFunc: func(ID string) (*session.Session, error) {
+				return nil, SessionExpired
 			},
 		}
 

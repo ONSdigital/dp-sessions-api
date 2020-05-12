@@ -6,12 +6,13 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	. "github.com/ONSdigital/dp-sessions-api/errors"
 	"github.com/ONSdigital/dp-sessions-api/session"
 	"github.com/ONSdigital/log.go/log"
 )
-
 
 // Sessions interface for getting a new session
 type Sessions interface {
@@ -79,18 +80,18 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 		ctx := r.Context()
 		ID := getVarsFunc(r)["ID"]
 
-		result, err := cache.GetByID(ID)
+		sess, err := cache.GetByID(ID)
 		if err != nil {
-			writeErrorResponse(ctx, w, "unable to get session by id", err, http.StatusInternalServerError)
+			writeErrorResponse(ctx, w, err.Error(), err, getErrorStatus(err))
 			return
 		}
 
-		if result == nil {
-			writeErrorResponse(ctx, w,"session not found", err, http.StatusNotFound)
+		if sess == nil {
+			writeErrorResponse(ctx, w, "session not found", err, http.StatusNotFound)
 			return
 		}
 
-		resultJSON, err := result.MarshalJSON()
+		sessJSON, err := sess.MarshalJSON()
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to marshal session", err, http.StatusInternalServerError)
 			return
@@ -98,7 +99,7 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(resultJSON)
+		w.Write(sessJSON)
 	}
 }
 
@@ -109,4 +110,14 @@ func writeErrorResponse(ctx context.Context, w http.ResponseWriter, msg string, 
 		log.Event(ctx, msg, log.ERROR)
 	}
 	http.Error(w, msg, status)
+}
+
+func getErrorStatus(err error) int {
+	var status int
+	if errors.Is(err, SessionNotFound) {
+		status = http.StatusNotFound
+	} else if errors.Is(err, SessionExpired) {
+		status = http.StatusNotFound
+	}
+	return status
 }

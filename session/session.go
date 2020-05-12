@@ -12,9 +12,10 @@ const (
 
 // Session defines the structure required for a session
 type Session struct {
-	ID    string    `json:"id"`
-	Email string    `json:"email"`
-	Start time.Time `json:"start"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	Start        time.Time `json:"start"`
+	LastAccessed time.Time `json:"lastAccessed"`
 }
 
 // NewSessionDetails is the structure of the request needed to create a session
@@ -28,9 +29,10 @@ type IDGenerator interface {
 }
 
 type jsonModel struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-	Start string `json:"start"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	Start        string    `json:"start"`
+	LastAccessed time.Time `json:"lastAccessed"`
 }
 
 // MarshalJSON used to marshal Session object for outgoing requests
