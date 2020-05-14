@@ -32,7 +32,7 @@ type jsonModel struct {
 	ID           string `json:"id"`
 	Email        string `json:"email"`
 	Start        string `json:"start"`
-	LastAccessed string `json:"lastAccessed"`
+	LastAccessed string `json:"last_accessed"`
 }
 
 // MarshalJSON used to marshal Session object for outgoing requests
@@ -53,9 +53,9 @@ func CreateNewSession(email string) (Session, error) {
 	}
 
 	return Session{
-		ID:    id,
-		Email: email,
-		Start: time.Now(),
+		ID:           id,
+		Email:        email,
+		Start:        time.Now(),
 		LastAccessed: time.Now(),
 	}, nil
 }
