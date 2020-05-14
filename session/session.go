@@ -29,18 +29,19 @@ type IDGenerator interface {
 }
 
 type jsonModel struct {
-	ID           string    `json:"id"`
-	Email        string    `json:"email"`
-	Start        string    `json:"start"`
-	LastAccessed time.Time `json:"lastAccessed"`
+	ID           string `json:"id"`
+	Email        string `json:"email"`
+	Start        string `json:"start"`
+	LastAccessed string `json:"lastAccessed"`
 }
 
 // MarshalJSON used to marshal Session object for outgoing requests
 func (sess *Session) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&jsonModel{
-		ID:    sess.ID,
-		Email: sess.Email,
-		Start: sess.Start.Format(dateTimeFMT),
+		ID:           sess.ID,
+		Email:        sess.Email,
+		Start:        sess.Start.Format(dateTimeFMT),
+		LastAccessed: sess.LastAccessed.Format(dateTimeFMT),
 	})
 }
 
@@ -55,6 +56,7 @@ func CreateNewSession(email string) (Session, error) {
 		ID:    id,
 		Email: email,
 		Start: time.Now(),
+		LastAccessed: time.Now(),
 	}, nil
 }
 

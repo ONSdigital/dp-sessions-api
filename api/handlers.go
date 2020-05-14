@@ -62,6 +62,8 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 			return
 		}
 
+		log.Event(ctx, "session added to cache", log.INFO)
+
 		sessJSON, err := sess.MarshalJSON()
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to marshal session", err, http.StatusInternalServerError)
