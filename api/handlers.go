@@ -114,10 +114,13 @@ func writeErrorResponse(ctx context.Context, w http.ResponseWriter, msg string, 
 
 func getErrorStatus(err error) int {
 	var status int
-	if errors.Is(err, SessionNotFound) {
+	switch {
+	case errors.Is(err, SessionNotFound):
 		status = http.StatusNotFound
-	} else if errors.Is(err, SessionExpired) {
+	case errors.Is(err, SessionExpired):
 		status = http.StatusNotFound
+	default:
+		status = http.StatusInternalServerError
 	}
 	return status
 }

@@ -278,6 +278,28 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 			})
 		})
 	})
+
+	Convey("Given a valid request", t, func() {
+		mockCache := &CacheMock{
+			GetByIDFunc: func(ID string) (*session.Session, error) {
+				return nil, errors.New("unexpected error")
+			},
+		}
+
+		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars("ID", "123"))
+
+		req := httptest.NewRequest("GET", "/session/123", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is received", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then an error response is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(mockCache.GetByIDCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
 }
 
 func newSessionDetailsAndMarshal(email string) ([]byte, error) {
