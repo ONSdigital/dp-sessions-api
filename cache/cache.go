@@ -53,6 +53,9 @@ func (c *Cache) GetByID(ID string) (*session.Session, error) {
 		return nil, SessionExpired
 	}
 
+	s.LastAccessed = time.Now()
+	c.store[ID] = s
+
 	return s, nil
 }
 
