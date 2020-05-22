@@ -1,9 +1,13 @@
 package api
 
+//go:generate moq -out mockauth_test.go . AuthHandler
+
 import (
 	"context"
+	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 //API provides a struct to wrap the api around
@@ -11,15 +15,20 @@ type API struct {
 	Router *mux.Router
 }
 
-func Setup(ctx context.Context, r *mux.Router) *API {
+type AuthHandler interface {
+	Require(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc
+}
+
+func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler) *API {
 	api := &API{
 		Router: r,
 	}
 
 	nopSess := &NOPSessions{}
 	nopCache := &NOPCache{}
+	read := auth.Permissions{Read: true}
 
-	r.HandleFunc("/session", CreateSessionHandlerFunc(nopSess, nopCache)).Methods("POST")
+	r.HandleFunc("/session", permissions.Require(read, CreateSessionHandlerFunc(nopSess, nopCache))).Methods("POST")
 	r.HandleFunc("/session/{ID}", GetByIDSessionHandlerFunc(nopCache, mux.Vars)).Methods("GET")
 	return api
 }
