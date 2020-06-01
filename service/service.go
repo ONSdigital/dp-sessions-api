@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-api-clients-go/zebedee"
+	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	rchttp "github.com/ONSdigital/dp-rchttp"
 	"github.com/ONSdigital/dp-sessions-api/api"
 	"github.com/ONSdigital/dp-sessions-api/config"
 	"github.com/ONSdigital/go-ns/server"
@@ -35,7 +38,9 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 	s := server.New(cfg.BindAddr, r)
 	s.HandleOSSignals = false
 
-	a := api.Setup(ctx, r)
+	permissions := getAuthorisationHandlers(cfg)
+
+	a := api.Setup(ctx, r, permissions)
 
 	versionInfo, err := healthcheck.NewVersionInfo(
 		buildTime,
@@ -45,11 +50,15 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to parse version information")
 	}
+
 	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
-	if err := registerCheckers(ctx, &hc); err != nil {
+	zebedeeClient := zebedee.New(cfg.ZebedeeURL)
+
+	if err := registerCheckers(ctx, &hc, zebedeeClient); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 	r.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
+
 	hc.Start(ctx)
 
 	go func() {
@@ -86,7 +95,32 @@ func (svc *Service) Close(ctx context.Context) {
 	log.Event(ctx, "graceful shutdown complete", log.INFO)
 }
 
-func registerCheckers(ctx context.Context, hc *healthcheck.HealthCheck) (err error) {
-	// TODO ADD HEALTH CHECKS HERE
-	return
+func registerCheckers(ctx context.Context, hc *healthcheck.HealthCheck, zebedeeClient *zebedee.Client) (err error) {
+	hasErrors := false
+
+	if err = hc.AddCheck("Zebedee", zebedeeClient.Checker); err != nil {
+		hasErrors = true
+		log.Event(ctx, "error adding check for zebedeee", log.ERROR, log.Error(err))
+	}
+
+	if hasErrors {
+		return errors.New("Error(s) registering checkers for healthcheck")
+	}
+	return nil
+}
+
+func getAuthorisationHandlers(cfg *config.Config) api.AuthHandler {
+	auth.LoggerNamespace("dp-sessions-api-auth")
+
+	authClient := auth.NewPermissionsClient(rchttp.NewClient())
+	authVerifier := auth.DefaultPermissionsVerifier()
+
+	// for checking caller permissions when we only have a user/service token
+	permissions := auth.NewHandler(
+		auth.NewPermissionsRequestBuilder(cfg.ZebedeeURL),
+		authClient,
+		authVerifier,
+	)
+
+	return permissions
 }

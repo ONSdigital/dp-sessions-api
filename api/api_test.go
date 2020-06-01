@@ -2,18 +2,24 @@ package api
 
 import (
 	"context"
-	"net/http/httptest"
-	"testing"
-
+	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/gorilla/mux"
 	. "github.com/smartystreets/goconvey/convey"
+	"net/http"
+	"net/http/httptest"
+	"sync"
+	"testing"
+)
+
+var (
+	mu          sync.Mutex
+	testContext = context.Background()
 )
 
 func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
-		r := mux.NewRouter()
-		ctx := context.Background()
-		api := Setup(ctx, r)
+		p := &auth.NopHandler{}
+		api := GetAPIWithMocks(p)
 
 		Convey("When created the following routes should have been added", func() {
 			// Replace the check below with any newly added api endpoints
@@ -25,16 +31,28 @@ func TestSetup(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	Convey("Given an API instance", t, func() {
-		r := mux.NewRouter()
-		ctx := context.Background()
-		a := Setup(ctx, r)
+		p := &AuthHandlerMock{
+			RequireFunc: func(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc {
+				return func(w http.ResponseWriter, r *http.Request) {
+					handler.ServeHTTP(w, r)
+				}
+			},
+		}
+		a := GetAPIWithMocks(p)
 
 		Convey("When the api is closed any dependencies are closed also", func() {
-			err := a.Close(ctx)
+			err := a.Close(testContext)
 			So(err, ShouldBeNil)
 			// Check that dependencies are closed here
 		})
 	})
+}
+
+// GetAPIWithMocks also used in other tests
+func GetAPIWithMocks(authMock AuthHandler) *API {
+	mu.Lock()
+	defer mu.Unlock()
+	return Setup(testContext, mux.NewRouter(), authMock)
 }
 
 func hasRoute(r *mux.Router, path, method string) bool {
