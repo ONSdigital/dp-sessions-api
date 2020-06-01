@@ -9,6 +9,7 @@ import (
 	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 //API provides a struct to wrap the api around
