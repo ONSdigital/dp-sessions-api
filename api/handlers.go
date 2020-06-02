@@ -23,6 +23,7 @@ type Sessions interface {
 type Cache interface {
 	Set(s *session.Session) error
 	GetByID(ID string) (*session.Session, error)
+	DeleteAll() error
 }
 
 // GetVarsFunc is a helper function that returns a map of request variables and parameters
@@ -102,6 +103,20 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(sessJSON)
+	}
+}
+
+func DeleteAllSessionsHandlerFunc(cache Cache) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if err := cache.DeleteAll(); err != nil {
+			writeErrorResponse(ctx, w, "no sessions to delete", err, http.StatusNotFound)
+			return
+		}
+
+		log.Event(ctx, "all sessions deleted", log.INFO)
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

@@ -42,6 +42,11 @@ func (n *NOPCache) GetByID(ID string) (*session.Session, error) {
 	}, nil
 }
 
+// DeleteAll removes all sessions from the cache
+func (n *NOPCache) DeleteAll() error {
+	return nil
+}
+
 func parseTime() time.Time {
 	startP, err := time.Parse(time.ANSIC, NOPStart)
 	if err != nil {

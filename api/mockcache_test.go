@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	lockCacheMockGetByID sync.RWMutex
-	lockCacheMockSet     sync.RWMutex
+	lockCacheMockDeleteAll sync.RWMutex
+	lockCacheMockGetByID   sync.RWMutex
+	lockCacheMockSet       sync.RWMutex
 )
 
 // Ensure, that CacheMock does implement Cache.
@@ -23,6 +24,9 @@ var _ Cache = &CacheMock{}
 //
 //         // make and configure a mocked Cache
 //         mockedCache := &CacheMock{
+//             DeleteAllFunc: func() error {
+// 	               panic("mock out the DeleteAll method")
+//             },
 //             GetByIDFunc: func(ID string) (*session.Session, error) {
 // 	               panic("mock out the GetByID method")
 //             },
@@ -36,6 +40,9 @@ var _ Cache = &CacheMock{}
 //
 //     }
 type CacheMock struct {
+	// DeleteAllFunc mocks the DeleteAll method.
+	DeleteAllFunc func() error
+
 	// GetByIDFunc mocks the GetByID method.
 	GetByIDFunc func(ID string) (*session.Session, error)
 
@@ -44,6 +51,9 @@ type CacheMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// DeleteAll holds details about calls to the DeleteAll method.
+		DeleteAll []struct {
+		}
 		// GetByID holds details about calls to the GetByID method.
 		GetByID []struct {
 			// ID is the ID argument value.
@@ -55,6 +65,32 @@ type CacheMock struct {
 			S *session.Session
 		}
 	}
+}
+
+// DeleteAll calls DeleteAllFunc.
+func (mock *CacheMock) DeleteAll() error {
+	if mock.DeleteAllFunc == nil {
+		panic("CacheMock.DeleteAllFunc: method is nil but Cache.DeleteAll was just called")
+	}
+	callInfo := struct {
+	}{}
+	lockCacheMockDeleteAll.Lock()
+	mock.calls.DeleteAll = append(mock.calls.DeleteAll, callInfo)
+	lockCacheMockDeleteAll.Unlock()
+	return mock.DeleteAllFunc()
+}
+
+// DeleteAllCalls gets all the calls that were made to DeleteAll.
+// Check the length with:
+//     len(mockedCache.DeleteAllCalls())
+func (mock *CacheMock) DeleteAllCalls() []struct {
+} {
+	var calls []struct {
+	}
+	lockCacheMockDeleteAll.RLock()
+	calls = mock.calls.DeleteAll
+	lockCacheMockDeleteAll.RUnlock()
+	return calls
 }
 
 // GetByID calls GetByIDFunc.

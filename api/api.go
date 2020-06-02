@@ -20,6 +20,11 @@ type AuthHandler interface {
 	Require(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc
 }
 
+var (
+	create = auth.Permissions{Create: true}
+	delete = auth.Permissions{Delete: true}
+)
+
 func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler) *API {
 	api := &API{
 		Router: r,
@@ -27,10 +32,10 @@ func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler) *API {
 
 	nopSess := &NOPSessions{}
 	nopCache := &NOPCache{}
-	create := auth.Permissions{Create: true}
 
-	r.HandleFunc("/session", permissions.Require(create, CreateSessionHandlerFunc(nopSess, nopCache))).Methods("POST")
-	r.HandleFunc("/session/{ID}", GetByIDSessionHandlerFunc(nopCache, mux.Vars)).Methods("GET")
+	r.HandleFunc("/session", permissions.Require(create, CreateSessionHandlerFunc(nopSess, nopCache))).Methods(http.MethodPost)
+	r.HandleFunc("/session/{ID}", GetByIDSessionHandlerFunc(nopCache, mux.Vars)).Methods(http.MethodGet)
+	r.HandleFunc("/session", permissions.Require(delete, DeleteAllSessionsHandlerFunc(nopCache))).Methods(http.MethodDelete)
 	return api
 }
 
