@@ -1,8 +1,5 @@
 package api
 
-//go:generate moq -out mocksessions_test.go . Sessions
-//go:generate moq -out mockcache_test.go . Cache
-
 import (
 	"context"
 	"encoding/json"
@@ -13,17 +10,6 @@ import (
 	"github.com/ONSdigital/dp-sessions-api/session"
 	"github.com/ONSdigital/log.go/log"
 )
-
-// Sessions interface for getting a new session
-type Sessions interface {
-	New(email string) (*session.Session, error)
-}
-
-// Cache interface for storing and retrieving sessions
-type Cache interface {
-	Set(s *session.Session) error
-	GetByID(ID string) (*session.Session, error)
-}
 
 // GetVarsFunc is a helper function that returns a map of request variables and parameters
 type GetVarsFunc func(r *http.Request) map[string]string

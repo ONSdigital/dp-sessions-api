@@ -1,11 +1,7 @@
 package api
 
-//go:generate moq -out mockauth_test.go . AuthHandler
-
 import (
 	"context"
-	"net/http"
-
 	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
@@ -14,10 +10,6 @@ import (
 //API provides a struct to wrap the api around
 type API struct {
 	Router *mux.Router
-}
-
-type AuthHandler interface {
-	Require(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc
 }
 
 func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler) *API {
@@ -29,8 +21,8 @@ func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler) *API {
 	nopCache := &NOPCache{}
 	create := auth.Permissions{Create: true}
 
-	r.HandleFunc("/session", permissions.Require(create, CreateSessionHandlerFunc(nopSess, nopCache))).Methods("POST")
-	r.HandleFunc("/session/{ID}", GetByIDSessionHandlerFunc(nopCache, mux.Vars)).Methods("GET")
+	r.HandleFunc("/sessions", permissions.Require(create, CreateSessionHandlerFunc(nopSess, nopCache))).Methods("POST")
+	r.HandleFunc("/sessions/{ID}", GetByIDSessionHandlerFunc(nopCache, mux.Vars)).Methods("GET")
 	return api
 }
 
