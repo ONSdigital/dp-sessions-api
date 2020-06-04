@@ -307,13 +307,13 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 
 func TestDeleteAllSessionsHandlerFunc(t *testing.T) {
 	Convey("Give a valid request", t, func() {
-		mockCache := &CacheMock{DeleteAllFunc: func() error {
+		mockCache := &apiMock.CacheMock{DeleteAllFunc: func() error {
 			return nil
 		}}
 
-		sessionHandler := DeleteAllSessionsHandlerFunc(mockCache)
+		sessionHandler := api.DeleteAllSessionsHandlerFunc(mockCache)
 
-		req := httptest.NewRequest(http.MethodGet, "/session", nil)
+		req := httptest.NewRequest(http.MethodDelete, "/sessions", nil)
 		resp := httptest.NewRecorder()
 
 		Convey("When the request is received", func() {
@@ -321,6 +321,26 @@ func TestDeleteAllSessionsHandlerFunc(t *testing.T) {
 
 			Convey("Then the correct success response is returned", func() {
 				So(resp.Code, ShouldEqual, http.StatusOK)
+				So(mockCache.DeleteAllCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
+
+	Convey("Give a valid request", t, func() {
+		mockCache := &apiMock.CacheMock{DeleteAllFunc: func() error {
+			return errors.New("no sessions to delete")
+		}}
+
+		sessionHandler := api.DeleteAllSessionsHandlerFunc(mockCache)
+
+		req := httptest.NewRequest(http.MethodDelete, "/sessions", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is received", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then the correct success response is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusNotFound)
 				So(mockCache.DeleteAllCalls(), ShouldHaveLength, 1)
 			})
 		})
