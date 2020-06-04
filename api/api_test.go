@@ -1,14 +1,17 @@
-package api
+package api_test
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-authorisation/auth"
-	"github.com/gorilla/mux"
-	. "github.com/smartystreets/goconvey/convey"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"testing"
+
+	"github.com/ONSdigital/dp-authorisation/auth"
+	"github.com/ONSdigital/dp-sessions-api/api"
+	apiMock "github.com/ONSdigital/dp-sessions-api/api/mock"
+	"github.com/gorilla/mux"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 var (
@@ -23,8 +26,8 @@ func TestSetup(t *testing.T) {
 
 		Convey("When created the following routes should have been added", func() {
 			// Replace the check below with any newly added api endpoints
-			So(hasRoute(api.Router, "/session", http.MethodPost), ShouldBeTrue)
-			So(hasRoute(api.Router, "/session/{email}", http.MethodGet), ShouldBeTrue)
+			So(hasRoute(api.Router, "/sessions", "POST"), ShouldBeTrue)
+			So(hasRoute(api.Router, "/sessions/{email}", "GET"), ShouldBeTrue)
 			So(hasRoute(api.Router, "/session", http.MethodDelete), ShouldBeTrue)
 		})
 	})
@@ -32,7 +35,7 @@ func TestSetup(t *testing.T) {
 
 func TestClose(t *testing.T) {
 	Convey("Given an API instance", t, func() {
-		p := &AuthHandlerMock{
+		p := &apiMock.AuthHandlerMock{
 			RequireFunc: func(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc {
 				return func(w http.ResponseWriter, r *http.Request) {
 					handler.ServeHTTP(w, r)
@@ -50,10 +53,10 @@ func TestClose(t *testing.T) {
 }
 
 // GetAPIWithMocks also used in other tests
-func GetAPIWithMocks(authMock AuthHandler) *API {
+func GetAPIWithMocks(authMock api.AuthHandler) *api.API {
 	mu.Lock()
 	defer mu.Unlock()
-	return Setup(testContext, mux.NewRouter(), authMock)
+	return api.Setup(testContext, mux.NewRouter(), authMock)
 }
 
 func hasRoute(r *mux.Router, path, method string) bool {

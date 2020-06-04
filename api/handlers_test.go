@@ -1,23 +1,26 @@
-package api
+package api_test
 
 import (
 	"encoding/json"
 	"errors"
-	. "github.com/ONSdigital/dp-sessions-api/errors"
-	"github.com/ONSdigital/dp-sessions-api/session"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/ONSdigital/dp-sessions-api/api"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	apiMock "github.com/ONSdigital/dp-sessions-api/api/mock"
+	. "github.com/ONSdigital/dp-sessions-api/errors"
+	"github.com/ONSdigital/dp-sessions-api/session"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestCreateSessionHandlerFunc(t *testing.T) {
 	Convey("Given a valid request", t, func() {
-		mockSessions := &SessionsMock{}
-		mockCache := &CacheMock{}
-		sessionHandler := CreateSessionHandlerFunc(mockSessions, mockCache)
+		mockSessions := &apiMock.SessionsMock{}
+		mockCache := &apiMock.CacheMock{}
+		sessionHandler := api.CreateSessionHandlerFunc(mockSessions, mockCache)
 
 		req := httptest.NewRequest(http.MethodPost, "http://localhost:24400/session", nil)
 		resp := httptest.NewRecorder()
@@ -34,7 +37,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 	Convey("Given a valid request", t, func() {
 		currentTime := time.Now()
-		mockSessions := &SessionsMock{
+		mockSessions := &apiMock.SessionsMock{
 			NewFunc: func(email string) (*session.Session, error) {
 				return &session.Session{
 					ID:    "1234",
@@ -43,12 +46,12 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 				}, nil
 			},
 		}
-		mockCache := &CacheMock{
+		mockCache := &apiMock.CacheMock{
 			SetFunc: func(s *session.Session) error {
 				return nil
 			},
 		}
-		sessionHandler := CreateSessionHandlerFunc(mockSessions, mockCache)
+		sessionHandler := api.CreateSessionHandlerFunc(mockSessions, mockCache)
 
 		sessJSON, err := newSessionDetailsAndMarshal("test@test.com")
 		So(err, ShouldBeNil)
@@ -78,9 +81,9 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a bad request", t, func() {
-		mockSessions := &SessionsMock{}
-		mockCache := &CacheMock{}
-		sessionHandler := CreateSessionHandlerFunc(mockSessions, mockCache)
+		mockSessions := &apiMock.SessionsMock{}
+		mockCache := &apiMock.CacheMock{}
+		sessionHandler := api.CreateSessionHandlerFunc(mockSessions, mockCache)
 
 		req := httptest.NewRequest(http.MethodPost, "/session", strings.NewReader("this is not json"))
 		resp := httptest.NewRecorder()
@@ -96,9 +99,9 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a bad request", t, func() {
-		mockSessions := &SessionsMock{}
-		mockCache := &CacheMock{}
-		sessionHandler := CreateSessionHandlerFunc(mockSessions, mockCache)
+		mockSessions := &apiMock.SessionsMock{}
+		mockCache := &apiMock.CacheMock{}
+		sessionHandler := api.CreateSessionHandlerFunc(mockSessions, mockCache)
 
 		sessJSON, err := newSessionDetailsAndMarshal("")
 		So(err, ShouldBeNil)
@@ -117,13 +120,13 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a new session", t, func() {
-		mockSessions := &SessionsMock{
+		mockSessions := &apiMock.SessionsMock{
 			NewFunc: func(email string) (*session.Session, error) {
 				return nil, errors.New("unable to generate id")
 			},
 		}
-		mockCache := &CacheMock{}
-		sessionHandler := CreateSessionHandlerFunc(mockSessions, mockCache)
+		mockCache := &apiMock.CacheMock{}
+		sessionHandler := api.CreateSessionHandlerFunc(mockSessions, mockCache)
 
 		sessJSON, err := newSessionDetailsAndMarshal("test@test.com")
 		So(err, ShouldBeNil)
@@ -143,7 +146,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 	Convey("Given a valid request", t, func() {
 		currentTime := time.Now()
-		mockSessions := &SessionsMock{
+		mockSessions := &apiMock.SessionsMock{
 			NewFunc: func(email string) (*session.Session, error) {
 				return &session.Session{
 					ID:    "1234",
@@ -152,12 +155,12 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 				}, nil
 			},
 		}
-		mockCache := &CacheMock{
+		mockCache := &apiMock.CacheMock{
 			SetFunc: func(s *session.Session) error {
 				return errors.New("unable to add session to cache")
 			},
 		}
-		sessionHandler := CreateSessionHandlerFunc(mockSessions, mockCache)
+		sessionHandler := api.CreateSessionHandlerFunc(mockSessions, mockCache)
 
 		sessJSON, err := newSessionDetailsAndMarshal("test@test.com")
 		So(err, ShouldBeNil)
@@ -181,7 +184,7 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 	Convey("Given a valid request", t, func() {
 		sessionID := "123"
 		currentTime := time.Now()
-		mockCache := &CacheMock{
+		mockCache := &apiMock.CacheMock{
 			GetByIDFunc: func(email string) (*session.Session, error) {
 				return &session.Session{
 					ID:    "123",
@@ -197,7 +200,7 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 			}
 		}
 
-		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars)
+		sessionHandler := api.GetByIDSessionHandlerFunc(mockCache, getVars)
 
 		req := httptest.NewRequest(http.MethodGet, "/session/123", nil)
 		resp := httptest.NewRecorder()
@@ -214,13 +217,13 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a request to retrieve a session", t, func() {
-		mockCache := &CacheMock{
+		mockCache := &apiMock.CacheMock{
 			GetByIDFunc: func(ID string) (*session.Session, error) {
 				return nil, SessionNotFound
 			},
 		}
 
-		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars("ID", ""))
+		sessionHandler := api.GetByIDSessionHandlerFunc(mockCache, getVars("ID", ""))
 
 		req := httptest.NewRequest(http.MethodGet, "/session/123", nil)
 		resp := httptest.NewRecorder()
@@ -236,13 +239,13 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a valid request", t, func() {
-		mockCache := &CacheMock{
+		mockCache := &apiMock.CacheMock{
 			GetByIDFunc: func(ID string) (*session.Session, error) {
 				return nil, nil
 			},
 		}
 
-		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars("ID", "123"))
+		sessionHandler := api.GetByIDSessionHandlerFunc(mockCache, getVars("ID", "123"))
 
 		req := httptest.NewRequest(http.MethodGet, "/session/123", nil)
 		resp := httptest.NewRecorder()
@@ -258,13 +261,13 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a valid request", t, func() {
-		mockCache := &CacheMock{
+		mockCache := &apiMock.CacheMock{
 			GetByIDFunc: func(ID string) (*session.Session, error) {
 				return nil, SessionExpired
 			},
 		}
 
-		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars("ID", "123"))
+		sessionHandler := api.GetByIDSessionHandlerFunc(mockCache, getVars("ID", "123"))
 
 		req := httptest.NewRequest(http.MethodGet, "/session/123", nil)
 		resp := httptest.NewRecorder()
@@ -280,13 +283,13 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a valid request", t, func() {
-		mockCache := &CacheMock{
+		mockCache := &apiMock.CacheMock{
 			GetByIDFunc: func(ID string) (*session.Session, error) {
 				return nil, errors.New("unexpected error")
 			},
 		}
 
-		sessionHandler := GetByIDSessionHandlerFunc(mockCache, getVars("ID", "123"))
+		sessionHandler := api.GetByIDSessionHandlerFunc(mockCache, getVars("ID", "123"))
 
 		req := httptest.NewRequest(http.MethodGet, "/session/123", nil)
 		resp := httptest.NewRecorder()
@@ -336,7 +339,7 @@ func newSessionDetailsAndMarshal(email string) ([]byte, error) {
 	return sessJSON, nil
 }
 
-func getVars(k string, v string) GetVarsFunc {
+func getVars(k string, v string) api.GetVarsFunc {
 	return func(r *http.Request) map[string]string {
 		return map[string]string{
 			k: v,
