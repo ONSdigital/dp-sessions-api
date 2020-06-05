@@ -10,29 +10,29 @@ import (
 )
 
 var (
-	lockSessionsMockNew sync.RWMutex
+	lockSessionMockNew sync.RWMutex
 )
 
-// Ensure, that SessionsMock does implement Sessions.
+// Ensure, that SessionMock does implement Session.
 // If this is not the case, regenerate this file with moq.
-var _ api.Sessions = &SessionsMock{}
+var _ api.Session = &SessionMock{}
 
-// SessionsMock is a mock implementation of api.Sessions.
+// SessionMock is a mock implementation of api.Session.
 //
-//     func TestSomethingThatUsesSessions(t *testing.T) {
+//     func TestSomethingThatUsesSession(t *testing.T) {
 //
-//         // make and configure a mocked api.Sessions
-//         mockedSessions := &SessionsMock{
+//         // make and configure a mocked api.Session
+//         mockedSession := &SessionMock{
 //             NewFunc: func(email string) (*session.Session, error) {
 // 	               panic("mock out the New method")
 //             },
 //         }
 //
-//         // use mockedSessions in code that requires api.Sessions
+//         // use mockedSession in code that requires api.Session
 //         // and then make assertions.
 //
 //     }
-type SessionsMock struct {
+type SessionMock struct {
 	// NewFunc mocks the New method.
 	NewFunc func(email string) (*session.Session, error)
 
@@ -47,32 +47,32 @@ type SessionsMock struct {
 }
 
 // New calls NewFunc.
-func (mock *SessionsMock) New(email string) (*session.Session, error) {
+func (mock *SessionMock) New(email string) (*session.Session, error) {
 	if mock.NewFunc == nil {
-		panic("SessionsMock.NewFunc: method is nil but Sessions.New was just called")
+		panic("SessionMock.NewFunc: method is nil but Session.New was just called")
 	}
 	callInfo := struct {
 		Email string
 	}{
 		Email: email,
 	}
-	lockSessionsMockNew.Lock()
+	lockSessionMockNew.Lock()
 	mock.calls.New = append(mock.calls.New, callInfo)
-	lockSessionsMockNew.Unlock()
+	lockSessionMockNew.Unlock()
 	return mock.NewFunc(email)
 }
 
 // NewCalls gets all the calls that were made to New.
 // Check the length with:
-//     len(mockedSessions.NewCalls())
-func (mock *SessionsMock) NewCalls() []struct {
+//     len(mockedSession.NewCalls())
+func (mock *SessionMock) NewCalls() []struct {
 	Email string
 } {
 	var calls []struct {
 		Email string
 	}
-	lockSessionsMockNew.RLock()
+	lockSessionMockNew.RLock()
 	calls = mock.calls.New
-	lockSessionsMockNew.RUnlock()
+	lockSessionMockNew.RUnlock()
 	return calls
 }

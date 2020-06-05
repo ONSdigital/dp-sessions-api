@@ -17,7 +17,7 @@ func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler) *API {
 		Router: r,
 	}
 
-	nopSess := &NOPSessions{}
+	nopSess := &NOPSession{}
 	nopCache := &NOPCache{}
 	create := auth.Permissions{Create: true}
 

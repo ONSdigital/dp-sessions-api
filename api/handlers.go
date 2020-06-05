@@ -15,7 +15,7 @@ import (
 type GetVarsFunc func(r *http.Request) map[string]string
 
 // CreateSessionHandlerFunc returns a function that generates a session. Method = "POST"
-func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
+func CreateSessionHandlerFunc(sess Session, cache Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -31,7 +31,7 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 			return
 		}
 
-		sess, err := sessions.New(c.Email)
+		sess, err := sess.New(c.Email)
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to create session", err, http.StatusInternalServerError)
 			return
@@ -50,7 +50,7 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 
 		log.Event(ctx, "session added to cache", log.INFO)
 
-		sessJSON, err := sess.MarshalJSON()
+		sessJSON, err := s.MarshalJSON()
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to marshal session", err, http.StatusInternalServerError)
 			return

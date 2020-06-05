@@ -1,7 +1,7 @@
 package api
 
 //go:generate moq -out mock/mockauth.go -pkg mock . AuthHandler
-//go:generate moq -out mock/mocksessions.go -pkg mock . Sessions
+//go:generate moq -out mock/mocksession.go -pkg mock . Session
 //go:generate moq -out mock/mockcache.go -pkg mock . Cache
 
 import (
@@ -15,8 +15,8 @@ type AuthHandler interface {
 	Require(required auth.Permissions, handler http.HandlerFunc) http.HandlerFunc
 }
 
-// Sessions interface for getting a new session
-type Sessions interface {
+// Session interface for getting a new session
+type Session interface {
 	New(email string) (*session.Session, error)
 }
 
