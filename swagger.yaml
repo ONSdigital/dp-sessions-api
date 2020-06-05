@@ -12,8 +12,10 @@ schemes:
 tags:
   - name: "session"
 paths:
-  /session:
+  /sessions:
     post:
+      security:
+        - ServiceToken: []
       tags:
         - session
       summary: Create a session endpoint
@@ -25,7 +27,7 @@ paths:
           name: New session details
           description: Creates a new session for the provided user email.
           schema:
-            $ref: "#/definitions/NewSessionRequest"
+            $ref: "#/definitions/New%20Session%20Request"
       produces:
         - application/json
       responses:
@@ -35,9 +37,29 @@ paths:
             $ref: "#/definitions/Session"
         400:
           description: Bad Request
+        401:
+          description: Unauthorized
         500:
           description: Internal Server Error
-  /session/{ID}:
+    delete:
+      security:
+        - ServiceToken: []
+      tags:
+        - session
+      summary: Delete all sessions
+      description: Deletes all sessions from the cache
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+        400:
+          description: Bad Request
+        401:
+          description: Unauthorized
+        404:
+          description: Not Found
+  /sessions/{ID}:
     get:
       tags:
         - session
@@ -61,8 +83,14 @@ paths:
         500:
           description: Internal Server Error
 
+securityDefinitions:
+  ServiceToken:
+    type: apiKey
+    in: header
+    name: service-token
+
 definitions:
-  NewSessionRequest:
+  New Session Request:
     type: object
     properties:
       email:

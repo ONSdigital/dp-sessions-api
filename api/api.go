@@ -2,9 +2,15 @@ package api
 
 import (
 	"context"
+
 	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
+)
+
+var (
+	create = auth.Permissions{Create: true}
+	delete = auth.Permissions{Delete: true}
 )
 
 //API provides a struct to wrap the api around
@@ -19,10 +25,10 @@ func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler) *API {
 
 	nopSess := &NOPSession{}
 	nopCache := &NOPCache{}
-	create := auth.Permissions{Create: true}
 
 	r.HandleFunc("/sessions", permissions.Require(create, CreateSessionHandlerFunc(nopSess, nopCache))).Methods("POST")
 	r.HandleFunc("/sessions/{ID}", GetByIDSessionHandlerFunc(nopCache, mux.Vars)).Methods("GET")
+	r.HandleFunc("/sessions", permissions.Require(delete, DeleteAllSessionsHandlerFunc(nopCache))).Methods("DELETE")
 	return api
 }
 

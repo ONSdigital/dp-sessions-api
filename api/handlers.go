@@ -85,6 +85,20 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 	}
 }
 
+func DeleteAllSessionsHandlerFunc(cache Cache) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if err := cache.DeleteAll(); err != nil {
+			writeErrorResponse(ctx, w, "no sessions to delete", err, http.StatusNotFound)
+			return
+		}
+
+		log.Event(ctx, "all sessions deleted", log.INFO)
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 func writeErrorResponse(ctx context.Context, w http.ResponseWriter, msg string, err error, status int) {
 	if err != nil {
 		log.Event(ctx, msg, log.Error(err), log.ERROR)

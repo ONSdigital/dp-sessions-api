@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	. "github.com/ONSdigital/dp-sessions-api/errors"
 	"github.com/ONSdigital/dp-sessions-api/session"
 	"sync"
@@ -57,6 +58,21 @@ func (c *Cache) GetByID(ID string) (*session.Session, error) {
 	c.store[ID] = s
 
 	return s, nil
+}
+
+func (c *Cache) DeleteAll() error {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if len(c.store) == 0 {
+		return errors.New("no sessions to delete")
+	}
+
+	for k := range c.store {
+		delete(c.store, k)
+	}
+
+	return nil
 }
 
 func (c *Cache) findSessionBy(filterFunc func(s *session.Session) bool) *session.Session {

@@ -24,4 +24,5 @@ type Session interface {
 type Cache interface {
 	Set(s *session.Session) error
 	GetByID(ID string) (*session.Session, error)
+	DeleteAll() error
 }
