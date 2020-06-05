@@ -31,16 +31,10 @@ func CreateSessionHandlerFunc(sess Session, cache Cache) http.HandlerFunc {
 			return
 		}
 
-		sess, err := sess.New(c.Email)
+		s, err := sess.New(c.Email)
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to create session", err, http.StatusInternalServerError)
 			return
-		}
-
-		s := &session.Session{
-			ID:    sess.ID,
-			Email: sess.Email,
-			Start: sess.Start,
 		}
 
 		if err := cache.Set(s); err != nil {
