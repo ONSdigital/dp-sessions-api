@@ -15,7 +15,7 @@ import (
 type GetVarsFunc func(r *http.Request) map[string]string
 
 // CreateSessionHandlerFunc returns a function that generates a session. Method = "POST"
-func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
+func CreateSessionHandlerFunc(sessionUpdater SessionUpdater, cache Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -31,16 +31,10 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 			return
 		}
 
-		sess, err := sessions.New(c.Email)
+		s, err := sessionUpdater.Update(c.Email)
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to create session", err, http.StatusInternalServerError)
 			return
-		}
-
-		s := &session.Session{
-			ID:    sess.ID,
-			Email: sess.Email,
-			Start: sess.Start,
 		}
 
 		if err := cache.Set(s); err != nil {
@@ -50,7 +44,7 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 
 		log.Event(ctx, "session added to cache", log.INFO)
 
-		sessJSON, err := sess.MarshalJSON()
+		sessionJSON, err := s.MarshalJSON()
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to marshal session", err, http.StatusInternalServerError)
 			return
@@ -58,7 +52,7 @@ func CreateSessionHandlerFunc(sessions Sessions, cache Cache) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		w.Write(sessJSON)
+		w.Write(sessionJSON)
 	}
 }
 
@@ -68,18 +62,18 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 		ctx := r.Context()
 		ID := getVarsFunc(r)["ID"]
 
-		sess, err := cache.GetByID(ID)
+		s, err := cache.GetByID(ID)
 		if err != nil {
 			writeErrorResponse(ctx, w, err.Error(), err, getErrorStatus(err))
 			return
 		}
 
-		if sess == nil {
+		if s == nil {
 			writeErrorResponse(ctx, w, "session not found", err, http.StatusNotFound)
 			return
 		}
 
-		sessJSON, err := sess.MarshalJSON()
+		sessionJSON, err := s.MarshalJSON()
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to marshal session", err, http.StatusInternalServerError)
 			return
@@ -87,7 +81,7 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(sessJSON)
+		w.Write(sessionJSON)
 	}
 }
 

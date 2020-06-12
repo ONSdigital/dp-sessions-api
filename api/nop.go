@@ -11,13 +11,13 @@ const (
 )
 
 // NOPSessions no-op struct
-type NOPSessions struct{}
+type NOPSession struct{}
 
 // NOPCache no-op struct
 type NOPCache struct{}
 
 // New creates a new session using an email address
-func (n *NOPSessions) New(email string) (*session.Session, error) {
+func (n *NOPSession) Update(email string) (*session.Session, error) {
 	startP := parseTime()
 	var sess = &session.Session{
 		ID:    NOPSessionID,

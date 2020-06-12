@@ -35,29 +35,39 @@ type jsonModel struct {
 	LastAccessed string `json:"last_accessed"`
 }
 
-// MarshalJSON used to marshal Session object for outgoing requests
-func (sess *Session) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&jsonModel{
-		ID:           sess.ID,
-		Email:        sess.Email,
-		Start:        sess.Start.Format(dateTimeFMT),
-		LastAccessed: sess.LastAccessed.Format(dateTimeFMT),
-	})
+// NewSession creates a new session
+func NewSession() *Session {
+	return &Session{
+		ID:           "",
+		Email:        "",
+		Start:        time.Time{},
+		LastAccessed: time.Time{},
+	}
 }
 
-// CreateNewSession creates a new session using email parameter
-func CreateNewSession(email string) (Session, error) {
+// UpdateSession updates the session with email parameter
+func (s *Session) Update(email string) (*Session, error) {
 	id, err := newID()
 	if err != nil {
-		return Session{}, err
+		return nil, err
 	}
 
-	return Session{
+	return &Session{
 		ID:           id,
 		Email:        email,
 		Start:        time.Now(),
 		LastAccessed: time.Now(),
 	}, nil
+}
+
+// MarshalJSON used to marshal Session object for outgoing requests
+func (s *Session) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&jsonModel{
+		ID:           s.ID,
+		Email:        s.Email,
+		Start:        s.Start.Format(dateTimeFMT),
+		LastAccessed: s.LastAccessed.Format(dateTimeFMT),
+	})
 }
 
 func newID() (string, error) {

@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-
 	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
@@ -23,10 +22,10 @@ func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler) *API {
 		Router: r,
 	}
 
-	nopSess := &NOPSessions{}
+	nopSession := &NOPSession{}
 	nopCache := &NOPCache{}
 
-	r.HandleFunc("/sessions", permissions.Require(create, CreateSessionHandlerFunc(nopSess, nopCache))).Methods("POST")
+	r.HandleFunc("/sessions", permissions.Require(create, CreateSessionHandlerFunc(nopSession, nopCache))).Methods("POST")
 	r.HandleFunc("/sessions/{ID}", GetByIDSessionHandlerFunc(nopCache, mux.Vars)).Methods("GET")
 	r.HandleFunc("/sessions", permissions.Require(delete, DeleteAllSessionsHandlerFunc(nopCache))).Methods("DELETE")
 	return api
