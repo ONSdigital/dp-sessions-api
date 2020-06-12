@@ -15,7 +15,7 @@ import (
 type GetVarsFunc func(r *http.Request) map[string]string
 
 // CreateSessionHandlerFunc returns a function that generates a session. Method = "POST"
-func CreateSessionHandlerFunc(updater Updater, cache Cache) http.HandlerFunc {
+func CreateSessionHandlerFunc(sessionUpdater SessionUpdater, cache Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -31,7 +31,7 @@ func CreateSessionHandlerFunc(updater Updater, cache Cache) http.HandlerFunc {
 			return
 		}
 
-		s, err := updater.Update(c.Email)
+		s, err := sessionUpdater.Update(c.Email)
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to create session", err, http.StatusInternalServerError)
 			return

@@ -10,29 +10,29 @@ import (
 )
 
 var (
-	lockUpdaterMockUpdate sync.RWMutex
+	lockSessionUpdaterMockUpdate sync.RWMutex
 )
 
-// Ensure, that UpdaterMock does implement Updater.
+// Ensure, that SessionUpdaterMock does implement SessionUpdater.
 // If this is not the case, regenerate this file with moq.
-var _ api.Updater = &UpdaterMock{}
+var _ api.SessionUpdater = &SessionUpdaterMock{}
 
-// UpdaterMock is a mock implementation of api.Updater.
+// SessionUpdaterMock is a mock implementation of api.SessionUpdater.
 //
-//     func TestSomethingThatUsesUpdater(t *testing.T) {
+//     func TestSomethingThatUsesSessionUpdater(t *testing.T) {
 //
-//         // make and configure a mocked api.Updater
-//         mockedUpdater := &UpdaterMock{
+//         // make and configure a mocked api.SessionUpdater
+//         mockedSessionUpdater := &SessionUpdaterMock{
 //             UpdateFunc: func(email string) (*session.Session, error) {
 // 	               panic("mock out the Update method")
 //             },
 //         }
 //
-//         // use mockedUpdater in code that requires api.Updater
+//         // use mockedSessionUpdater in code that requires api.SessionUpdater
 //         // and then make assertions.
 //
 //     }
-type UpdaterMock struct {
+type SessionUpdaterMock struct {
 	// UpdateFunc mocks the Update method.
 	UpdateFunc func(email string) (*session.Session, error)
 
@@ -47,32 +47,32 @@ type UpdaterMock struct {
 }
 
 // Update calls UpdateFunc.
-func (mock *UpdaterMock) Update(email string) (*session.Session, error) {
+func (mock *SessionUpdaterMock) Update(email string) (*session.Session, error) {
 	if mock.UpdateFunc == nil {
-		panic("UpdaterMock.UpdateFunc: method is nil but Updater.Update was just called")
+		panic("SessionUpdaterMock.UpdateFunc: method is nil but SessionUpdater.Update was just called")
 	}
 	callInfo := struct {
 		Email string
 	}{
 		Email: email,
 	}
-	lockUpdaterMockUpdate.Lock()
+	lockSessionUpdaterMockUpdate.Lock()
 	mock.calls.Update = append(mock.calls.Update, callInfo)
-	lockUpdaterMockUpdate.Unlock()
+	lockSessionUpdaterMockUpdate.Unlock()
 	return mock.UpdateFunc(email)
 }
 
 // UpdateCalls gets all the calls that were made to Update.
 // Check the length with:
-//     len(mockedUpdater.UpdateCalls())
-func (mock *UpdaterMock) UpdateCalls() []struct {
+//     len(mockedSessionUpdater.UpdateCalls())
+func (mock *SessionUpdaterMock) UpdateCalls() []struct {
 	Email string
 } {
 	var calls []struct {
 		Email string
 	}
-	lockUpdaterMockUpdate.RLock()
+	lockSessionUpdaterMockUpdate.RLock()
 	calls = mock.calls.Update
-	lockUpdaterMockUpdate.RUnlock()
+	lockSessionUpdaterMockUpdate.RUnlock()
 	return calls
 }

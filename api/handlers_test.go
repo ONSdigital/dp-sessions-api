@@ -18,7 +18,7 @@ import (
 
 func TestCreateSessionHandlerFunc(t *testing.T) {
 	Convey("Given a valid request", t, func() {
-		mockSession := &apiMock.UpdaterMock{}
+		mockSession := &apiMock.SessionUpdaterMock{}
 		mockCache := &apiMock.CacheMock{}
 		sessionHandler := api.CreateSessionHandlerFunc(mockSession, mockCache)
 
@@ -37,7 +37,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 	Convey("Given a valid request", t, func() {
 		currentTime := time.Now()
-		mockSession := &apiMock.UpdaterMock{
+		mockSession := &apiMock.SessionUpdaterMock{
 			UpdateFunc: func(email string) (*session.Session, error) {
 				return &session.Session{
 					ID:    "1234",
@@ -81,7 +81,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a bad request", t, func() {
-		mockSession := &apiMock.UpdaterMock{}
+		mockSession := &apiMock.SessionUpdaterMock{}
 		mockCache := &apiMock.CacheMock{}
 		sessionHandler := api.CreateSessionHandlerFunc(mockSession, mockCache)
 
@@ -99,7 +99,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a bad request", t, func() {
-		mockSession := &apiMock.UpdaterMock{}
+		mockSession := &apiMock.SessionUpdaterMock{}
 		mockCache := &apiMock.CacheMock{}
 		sessionHandler := api.CreateSessionHandlerFunc(mockSession, mockCache)
 
@@ -120,7 +120,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 	})
 
 	Convey("Given a new session", t, func() {
-		mockSession := &apiMock.UpdaterMock{
+		mockSession := &apiMock.SessionUpdaterMock{
 			UpdateFunc: func(email string) (*session.Session, error) {
 				return nil, errors.New("unable to generate id")
 			},
@@ -146,7 +146,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 	Convey("Given a valid request", t, func() {
 		currentTime := time.Now()
-		mockSession := &apiMock.UpdaterMock{
+		mockSession := &apiMock.SessionUpdaterMock{
 			UpdateFunc: func(email string) (*session.Session, error) {
 				return &session.Session{
 					ID:    "1234",
