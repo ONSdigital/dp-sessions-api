@@ -18,7 +18,7 @@ import (
 
 func TestCreateSessionHandlerFunc(t *testing.T) {
 	Convey("Given a valid request", t, func() {
-		mockSession := &apiMock.SessionMock{}
+		mockSession := &apiMock.UpdaterMock{}
 		mockCache := &apiMock.CacheMock{}
 		sessionHandler := api.CreateSessionHandlerFunc(mockSession, mockCache)
 
@@ -30,15 +30,15 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 			Convey("Then return an error response", func() {
 				So(resp.Code, ShouldEqual, http.StatusBadRequest)
-				So(mockSession.NewCalls(), ShouldHaveLength, 0)
+				So(mockSession.UpdateCalls(), ShouldHaveLength, 0)
 			})
 		})
 	})
 
 	Convey("Given a valid request", t, func() {
 		currentTime := time.Now()
-		mockSession := &apiMock.SessionMock{
-			NewFunc: func(email string) (*session.Session, error) {
+		mockSession := &apiMock.UpdaterMock{
+			UpdateFunc: func(email string) (*session.Session, error) {
 				return &session.Session{
 					ID:    "1234",
 					Email: email,
@@ -73,15 +73,15 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(resp.Body.String(), ShouldEqual, string(b))
 				So(resp.Code, ShouldEqual, 201)
-				So(mockSession.NewCalls(), ShouldHaveLength, 1)
-				So(mockSession.NewCalls()[0].Email, ShouldEqual, "test@test.com")
+				So(mockSession.UpdateCalls(), ShouldHaveLength, 1)
+				So(mockSession.UpdateCalls()[0].Email, ShouldEqual, "test@test.com")
 				So(mockCache.SetCalls(), ShouldHaveLength, 1)
 			})
 		})
 	})
 
 	Convey("Given a bad request", t, func() {
-		mockSession := &apiMock.SessionMock{}
+		mockSession := &apiMock.UpdaterMock{}
 		mockCache := &apiMock.CacheMock{}
 		sessionHandler := api.CreateSessionHandlerFunc(mockSession, mockCache)
 
@@ -93,13 +93,13 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 			Convey("Then return an error response", func() {
 				So(resp.Code, ShouldEqual, http.StatusBadRequest)
-				So(mockSession.NewCalls(), ShouldHaveLength, 0)
+				So(mockSession.UpdateCalls(), ShouldHaveLength, 0)
 			})
 		})
 	})
 
 	Convey("Given a bad request", t, func() {
-		mockSession := &apiMock.SessionMock{}
+		mockSession := &apiMock.UpdaterMock{}
 		mockCache := &apiMock.CacheMock{}
 		sessionHandler := api.CreateSessionHandlerFunc(mockSession, mockCache)
 
@@ -114,14 +114,14 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 			Convey("Then return an error response", func() {
 				So(resp.Code, ShouldEqual, http.StatusBadRequest)
-				So(mockSession.NewCalls(), ShouldHaveLength, 0)
+				So(mockSession.UpdateCalls(), ShouldHaveLength, 0)
 			})
 		})
 	})
 
 	Convey("Given a new session", t, func() {
-		mockSession := &apiMock.SessionMock{
-			NewFunc: func(email string) (*session.Session, error) {
+		mockSession := &apiMock.UpdaterMock{
+			UpdateFunc: func(email string) (*session.Session, error) {
 				return nil, errors.New("unable to generate id")
 			},
 		}
@@ -139,15 +139,15 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 			Convey("Then return an error response", func() {
 				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
-				So(mockSession.NewCalls(), ShouldHaveLength, 1)
+				So(mockSession.UpdateCalls(), ShouldHaveLength, 1)
 			})
 		})
 	})
 
 	Convey("Given a valid request", t, func() {
 		currentTime := time.Now()
-		mockSession := &apiMock.SessionMock{
-			NewFunc: func(email string) (*session.Session, error) {
+		mockSession := &apiMock.UpdaterMock{
+			UpdateFunc: func(email string) (*session.Session, error) {
 				return &session.Session{
 					ID:    "1234",
 					Email: email,
@@ -173,7 +173,7 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 
 			Convey("Then return an error response", func() {
 				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
-				So(mockSession.NewCalls(), ShouldHaveLength, 1)
+				So(mockSession.UpdateCalls(), ShouldHaveLength, 1)
 				So(mockCache.SetCalls(), ShouldHaveLength, 1)
 			})
 		})

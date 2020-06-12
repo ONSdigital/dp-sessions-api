@@ -17,7 +17,7 @@ type NOPSession struct{}
 type NOPCache struct{}
 
 // New creates a new session using an email address
-func (n *NOPSession) New(email string) (*session.Session, error) {
+func (n *NOPSession) Update(email string) (*session.Session, error) {
 	startP := parseTime()
 	var sess = &session.Session{
 		ID:    NOPSessionID,

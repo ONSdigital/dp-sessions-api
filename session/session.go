@@ -45,8 +45,8 @@ func NewSession() *Session {
 	}
 }
 
-// New creates a new session using email parameter
-func (sess *Session) New(email string) (*Session, error) {
+// UpdateSession updates the session with email parameter
+func (s *Session) Update(email string) (*Session, error) {
 	id, err := newID()
 	if err != nil {
 		return nil, err
@@ -61,12 +61,12 @@ func (sess *Session) New(email string) (*Session, error) {
 }
 
 // MarshalJSON used to marshal Session object for outgoing requests
-func (sess *Session) MarshalJSON() ([]byte, error) {
+func (s *Session) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&jsonModel{
-		ID:           sess.ID,
-		Email:        sess.Email,
-		Start:        sess.Start.Format(dateTimeFMT),
-		LastAccessed: sess.LastAccessed.Format(dateTimeFMT),
+		ID:           s.ID,
+		Email:        s.Email,
+		Start:        s.Start.Format(dateTimeFMT),
+		LastAccessed: s.LastAccessed.Format(dateTimeFMT),
 	})
 }
 

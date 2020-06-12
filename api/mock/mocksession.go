@@ -10,69 +10,69 @@ import (
 )
 
 var (
-	lockSessionMockNew sync.RWMutex
+	lockUpdaterMockUpdate sync.RWMutex
 )
 
-// Ensure, that SessionMock does implement Session.
+// Ensure, that UpdaterMock does implement Updater.
 // If this is not the case, regenerate this file with moq.
-var _ api.Session = &SessionMock{}
+var _ api.Updater = &UpdaterMock{}
 
-// SessionMock is a mock implementation of api.Session.
+// UpdaterMock is a mock implementation of api.Updater.
 //
-//     func TestSomethingThatUsesSession(t *testing.T) {
+//     func TestSomethingThatUsesUpdater(t *testing.T) {
 //
-//         // make and configure a mocked api.Session
-//         mockedSession := &SessionMock{
-//             NewFunc: func(email string) (*session.Session, error) {
-// 	               panic("mock out the New method")
+//         // make and configure a mocked api.Updater
+//         mockedUpdater := &UpdaterMock{
+//             UpdateFunc: func(email string) (*session.Session, error) {
+// 	               panic("mock out the Update method")
 //             },
 //         }
 //
-//         // use mockedSession in code that requires api.Session
+//         // use mockedUpdater in code that requires api.Updater
 //         // and then make assertions.
 //
 //     }
-type SessionMock struct {
-	// NewFunc mocks the New method.
-	NewFunc func(email string) (*session.Session, error)
+type UpdaterMock struct {
+	// UpdateFunc mocks the Update method.
+	UpdateFunc func(email string) (*session.Session, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// New holds details about calls to the New method.
-		New []struct {
+		// Update holds details about calls to the Update method.
+		Update []struct {
 			// Email is the email argument value.
 			Email string
 		}
 	}
 }
 
-// New calls NewFunc.
-func (mock *SessionMock) New(email string) (*session.Session, error) {
-	if mock.NewFunc == nil {
-		panic("SessionMock.NewFunc: method is nil but Session.New was just called")
+// Update calls UpdateFunc.
+func (mock *UpdaterMock) Update(email string) (*session.Session, error) {
+	if mock.UpdateFunc == nil {
+		panic("UpdaterMock.UpdateFunc: method is nil but Updater.Update was just called")
 	}
 	callInfo := struct {
 		Email string
 	}{
 		Email: email,
 	}
-	lockSessionMockNew.Lock()
-	mock.calls.New = append(mock.calls.New, callInfo)
-	lockSessionMockNew.Unlock()
-	return mock.NewFunc(email)
+	lockUpdaterMockUpdate.Lock()
+	mock.calls.Update = append(mock.calls.Update, callInfo)
+	lockUpdaterMockUpdate.Unlock()
+	return mock.UpdateFunc(email)
 }
 
-// NewCalls gets all the calls that were made to New.
+// UpdateCalls gets all the calls that were made to Update.
 // Check the length with:
-//     len(mockedSession.NewCalls())
-func (mock *SessionMock) NewCalls() []struct {
+//     len(mockedUpdater.UpdateCalls())
+func (mock *UpdaterMock) UpdateCalls() []struct {
 	Email string
 } {
 	var calls []struct {
 		Email string
 	}
-	lockSessionMockNew.RLock()
-	calls = mock.calls.New
-	lockSessionMockNew.RUnlock()
+	lockUpdaterMockUpdate.RLock()
+	calls = mock.calls.Update
+	lockUpdaterMockUpdate.RUnlock()
 	return calls
 }
