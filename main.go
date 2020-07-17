@@ -49,5 +49,6 @@ func run() error {
 		log.Event(ctx, "os signal received", log.Data{"signal": sig}, log.INFO)
 		svc.Close(ctx)
 	}
+
 	return nil
 }
