@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/ONSdigital/dp-api-clients-go/zebedee"
 	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -10,6 +11,7 @@ import (
 	"github.com/ONSdigital/dp-sessions-api/config"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/ONSdigital/log.go/log"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -40,7 +42,10 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 
 	permissions := getAuthorisationHandlers(cfg)
 
-	a := api.Setup(ctx, r, permissions)
+	if cfg.EnableTrainingFlag {
+		a := api.Setup(ctx, r, permissions)
+		spew.Dump(a)
+	}
 
 	versionInfo, err := healthcheck.NewVersionInfo(
 		buildTime,

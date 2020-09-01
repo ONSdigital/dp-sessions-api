@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/kelseyhightower/envconfig"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 // Config represents service configuration for dp-sessions-api
@@ -13,6 +14,7 @@ type Config struct {
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"				json:"-"`
+	EnableTrainingFlag         bool          `envconfig:"ENABLE_TRAINING"`
 }
 
 var cfg *Config
@@ -31,6 +33,7 @@ func Get() (*Config, error) {
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		ZebedeeURL:                 "http://localhost:8082",
 		ServiceAuthToken:           "",
+		EnableTrainingFlag:         true,
 	}
 
 	return cfg, envconfig.Process("", cfg)
