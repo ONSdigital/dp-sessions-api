@@ -11,7 +11,6 @@ import (
 	"github.com/ONSdigital/dp-sessions-api/config"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/ONSdigital/log.go/log"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -42,9 +41,9 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 
 	permissions := getAuthorisationHandlers(cfg)
 
+	var a *api.API
 	if cfg.EnableTrainingFlag {
-		a := api.Setup(ctx, r, permissions)
-		spew.Dump(a)
+		a = api.Setup(ctx, r, permissions)
 	}
 
 	versionInfo, err := healthcheck.NewVersionInfo(
