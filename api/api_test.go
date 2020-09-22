@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"context"
+	dpredis "github.com/ONSdigital/dp-redis"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -22,13 +23,14 @@ var (
 func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		p := &auth.NopHandler{}
-		api := GetAPIWithMocks(p)
+		c := &dpredis.Client{}
+		a := GetAPIWithMocks(p, c)
 
 		Convey("When created the following routes should have been added", func() {
 			// Replace the check below with any newly added api endpoints
-			So(hasRoute(api.Router, "/sessions", "POST"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/sessions/{id}", "GET"), ShouldBeTrue)
-			So(hasRoute(api.Router, "/sessions", "DELETE"), ShouldBeTrue)
+			So(hasRoute(a.Router, "/sessions", "POST"), ShouldBeTrue)
+			So(hasRoute(a.Router, "/sessions/{id}", "GET"), ShouldBeTrue)
+			So(hasRoute(a.Router, "/sessions", "DELETE"), ShouldBeTrue)
 		})
 	})
 }
@@ -42,7 +44,8 @@ func TestClose(t *testing.T) {
 				}
 			},
 		}
-		a := GetAPIWithMocks(p)
+		c := &dpredis.Client{}
+		a := GetAPIWithMocks(p, c)
 
 		Convey("When the api is closed any dependencies are closed also", func() {
 			err := a.Close(testContext)
@@ -53,10 +56,10 @@ func TestClose(t *testing.T) {
 }
 
 // GetAPIWithMocks also used in other tests
-func GetAPIWithMocks(authMock api.AuthHandler) *api.API {
+func GetAPIWithMocks(authMock api.AuthHandler, elasticacheClient *dpredis.Client) *api.API {
 	mu.Lock()
 	defer mu.Unlock()
-	return api.Setup(testContext, mux.NewRouter(), authMock)
+	return api.Setup(testContext, mux.NewRouter(), authMock, elasticacheClient)
 }
 
 func hasRoute(r *mux.Router, path, method string) bool {

@@ -28,7 +28,7 @@ func (n *NOPSession) Update(email string) (*session.Session, error) {
 }
 
 // Set stores a session into the cache
-func (n *NOPCache) Set(s *session.Session) error {
+func (n *NOPCache) SetSession(s *session.Session) error {
 	return nil
 }
 

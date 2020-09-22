@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	lockCacheMockDeleteAll sync.RWMutex
-	lockCacheMockGetByID   sync.RWMutex
-	lockCacheMockSet       sync.RWMutex
+	lockCacheMockDeleteAll  sync.RWMutex
+	lockCacheMockGetByID    sync.RWMutex
+	lockCacheMockSetSession sync.RWMutex
 )
 
 // Ensure, that CacheMock does implement Cache.
@@ -31,8 +31,8 @@ var _ api.Cache = &CacheMock{}
 //             GetByIDFunc: func(ID string) (*session.Session, error) {
 // 	               panic("mock out the GetByID method")
 //             },
-//             SetFunc: func(s *session.Session) error {
-// 	               panic("mock out the Set method")
+//             SetSessionFunc: func(s *session.Session) error {
+// 	               panic("mock out the SetSession method")
 //             },
 //         }
 //
@@ -47,8 +47,8 @@ type CacheMock struct {
 	// GetByIDFunc mocks the GetByID method.
 	GetByIDFunc func(ID string) (*session.Session, error)
 
-	// SetFunc mocks the Set method.
-	SetFunc func(s *session.Session) error
+	// SetSessionFunc mocks the SetSession method.
+	SetSessionFunc func(s *session.Session) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -60,8 +60,8 @@ type CacheMock struct {
 			// ID is the ID argument value.
 			ID string
 		}
-		// Set holds details about calls to the Set method.
-		Set []struct {
+		// SetSession holds details about calls to the SetSession method.
+		SetSession []struct {
 			// S is the s argument value.
 			S *session.Session
 		}
@@ -125,33 +125,33 @@ func (mock *CacheMock) GetByIDCalls() []struct {
 	return calls
 }
 
-// Set calls SetFunc.
-func (mock *CacheMock) Set(s *session.Session) error {
-	if mock.SetFunc == nil {
-		panic("CacheMock.SetFunc: method is nil but Cache.Set was just called")
+// SetSession calls SetSessionFunc.
+func (mock *CacheMock) SetSession(s *session.Session) error {
+	if mock.SetSessionFunc == nil {
+		panic("CacheMock.SetSessionFunc: method is nil but Cache.SetSession was just called")
 	}
 	callInfo := struct {
 		S *session.Session
 	}{
 		S: s,
 	}
-	lockCacheMockSet.Lock()
-	mock.calls.Set = append(mock.calls.Set, callInfo)
-	lockCacheMockSet.Unlock()
-	return mock.SetFunc(s)
+	lockCacheMockSetSession.Lock()
+	mock.calls.SetSession = append(mock.calls.SetSession, callInfo)
+	lockCacheMockSetSession.Unlock()
+	return mock.SetSessionFunc(s)
 }
 
-// SetCalls gets all the calls that were made to Set.
+// SetSessionCalls gets all the calls that were made to SetSession.
 // Check the length with:
-//     len(mockedCache.SetCalls())
-func (mock *CacheMock) SetCalls() []struct {
+//     len(mockedCache.SetSessionCalls())
+func (mock *CacheMock) SetSessionCalls() []struct {
 	S *session.Session
 } {
 	var calls []struct {
 		S *session.Session
 	}
-	lockCacheMockSet.RLock()
-	calls = mock.calls.Set
-	lockCacheMockSet.RUnlock()
+	lockCacheMockSetSession.RLock()
+	calls = mock.calls.SetSession
+	lockCacheMockSetSession.RUnlock()
 	return calls
 }
