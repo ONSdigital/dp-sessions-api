@@ -8,7 +8,7 @@ require (
 	github.com/ONSdigital/dp-healthcheck v1.0.4
 	github.com/ONSdigital/dp-net v1.0.3
 	github.com/ONSdigital/dp-rchttp v1.0.0
-	github.com/ONSdigital/dp-redis v0.0.0-20200921092744-0f21abb24a51
+	github.com/ONSdigital/dp-redis v0.1.0
 	github.com/ONSdigital/go-ns v0.0.0-20200205115900-a11716f93bad
 	github.com/ONSdigital/log.go v1.0.0
 	github.com/google/uuid v1.1.1
