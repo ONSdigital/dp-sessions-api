@@ -35,7 +35,7 @@ func Get() (*Config, error) {
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		ZebedeeURL:                 "http://localhost:8082",
 		ServiceAuthToken:           "",
-		ElasticacheAddr:            "http://localhost:6379",
+		ElasticacheAddr:            "localhost:6379",
 		ElasticachePassword:        "default",
 		ElasticacheDatabase:        0,
 		ElasticacheTTL:             30 * time.Minute,
