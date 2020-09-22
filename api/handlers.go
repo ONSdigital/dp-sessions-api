@@ -37,7 +37,7 @@ func CreateSessionHandlerFunc(sessionUpdater SessionUpdater, cache Cache) http.H
 			return
 		}
 
-		if err := cache.Set(s); err != nil {
+		if err := cache.SetSession(s); err != nil {
 			writeErrorResponse(ctx, w, "unable to add session to cache", err, http.StatusInternalServerError)
 			return
 		}

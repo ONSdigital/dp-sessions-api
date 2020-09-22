@@ -3,6 +3,9 @@ package api
 import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/auth"
+	dpredis "github.com/ONSdigital/dp-redis"
+	"github.com/ONSdigital/dp-sessions-api/config"
+	"github.com/ONSdigital/dp-sessions-api/session"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
@@ -22,12 +25,26 @@ func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler) *API {
 		Router: r,
 	}
 
-	nopSession := &NOPSession{}
-	nopCache := &NOPCache{}
+	s := session.NewSession()
 
-	r.HandleFunc("/sessions", permissions.Require(create, CreateSessionHandlerFunc(nopSession, nopCache))).Methods("POST")
-	r.HandleFunc("/sessions/{ID}", GetByIDSessionHandlerFunc(nopCache, mux.Vars)).Methods("GET")
-	r.HandleFunc("/sessions", permissions.Require(delete, DeleteAllSessionsHandlerFunc(nopCache))).Methods("DELETE")
+	cfg, err := config.Get()
+	if err != nil {
+		return nil
+	}
+	
+	cache, err := dpredis.NewClient(dpredis.Config{
+		Addr:     cfg.ElasticacheAddr,
+		Password: cfg.ElasticachePassword,
+		Database: cfg.ElasticacheDatabase,
+		TTL:      cfg.ElasticacheTTL,
+	})
+	if err != nil {
+		return nil
+	}
+
+	r.HandleFunc("/sessions", permissions.Require(create, CreateSessionHandlerFunc(s, cache))).Methods("POST")
+	r.HandleFunc("/sessions/{ID}", GetByIDSessionHandlerFunc(cache, mux.Vars)).Methods("GET")
+	r.HandleFunc("/sessions", permissions.Require(delete, DeleteAllSessionsHandlerFunc(cache))).Methods("DELETE")
 	return api
 }
 
