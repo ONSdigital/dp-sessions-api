@@ -41,8 +41,6 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 
 	permissions := getAuthorisationHandlers(cfg)
 
-	a := api.Setup(ctx, r, permissions)
-
 	versionInfo, err := healthcheck.NewVersionInfo(
 		buildTime,
 		gitCommit,
@@ -70,6 +68,8 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 	r.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
 
 	hc.Start(ctx)
+
+	a := api.Setup(ctx, r, permissions, elasticacheClient)
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
