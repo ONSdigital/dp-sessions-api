@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/ONSdigital/dp-sessions-api/api"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,6 +17,8 @@ import (
 	"github.com/ONSdigital/dp-sessions-api/session"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+var timeBefore = time.Now().UTC()
 
 func TestCreateSessionHandlerFunc(t *testing.T) {
 	Convey("Given a valid request", t, func() {
@@ -52,10 +56,21 @@ func TestCreateSessionHandlerFunc(t *testing.T) {
 		Convey("When the request is received", func() {
 			sessionHandler.ServeHTTP(resp, req)
 
+			sessionResp, err := unmarshalJSON(resp.Body)
+			if err != nil {
+				t.Errorf("failed to retreive response body")
+			}
+
+			timeAfter := time.Now().UTC()
+
 			Convey("Then the expected success response is returned", func() {
 				So(err, ShouldBeNil)
 				So(resp.Code, ShouldEqual, 201)
 				So(mockCache.SetSessionCalls(), ShouldHaveLength, 1)
+				So(sessionResp.Email, ShouldEqual, "test@test.com")
+				So(sessionResp.ID, ShouldNotBeNil)
+				So(sessionResp.Start, ShouldHappenBetween, timeBefore, timeAfter)
+				So(sessionResp.LastAccessed, ShouldHappenBetween, timeBefore, timeAfter)
 			})
 		})
 	})
@@ -331,4 +346,19 @@ func getVars(k string, v string) api.GetVarsFunc {
 			k: v,
 		}
 	}
+}
+
+func unmarshalJSON(body io.Reader) (*session.Session, error) {
+	b, err := ioutil.ReadAll(body)
+	if err != nil {
+		return nil, err
+	}
+
+	var s *session.Session
+
+	if err = json.Unmarshal(b, &s); err != nil {
+		return nil, err
+	}
+
+	return s, err
 }
