@@ -40,6 +40,8 @@ github.com/ONSdigital/dp-redis v0.1.1-0.20201022125855-9be9f01a5810 h1:TDqOBn9y2
 github.com/ONSdigital/dp-redis v0.1.1-0.20201022125855-9be9f01a5810/go.mod h1:HVAzhdywQg6Yuu9Hd4Zg0YOOUDHUHM/je6Ne9f4FwCs=
 github.com/ONSdigital/dp-redis v0.1.1-0.20201105150102-768df9d1e4b9 h1:HJzhAGPqykwFoXPmEeL9YjAiUeplVDTv/inK6LSEVpE=
 github.com/ONSdigital/dp-redis v0.1.1-0.20201105150102-768df9d1e4b9/go.mod h1:HVAzhdywQg6Yuu9Hd4Zg0YOOUDHUHM/je6Ne9f4FwCs=
+github.com/ONSdigital/dp-redis v0.1.1-0.20201105154625-374eb8ee843a h1:OMqSFj9OEBhQ3t9HRsk62TEAFJ8i3ducWwAIHEBwv6I=
+github.com/ONSdigital/dp-redis v0.1.1-0.20201105154625-374eb8ee843a/go.mod h1:HVAzhdywQg6Yuu9Hd4Zg0YOOUDHUHM/je6Ne9f4FwCs=
 github.com/ONSdigital/dp-sessions-api v0.2.0/go.mod h1:AGACIcN8ZHWuPU3XsES8w311YIb+pVCduTJiR6BUgzQ=
 github.com/ONSdigital/go-ns v0.0.0-20191104121206-f144c4ec2e58/go.mod h1:iWos35il+NjbvDEqwtB736pyHru0MPFE/LqcwkV1wDc=
 github.com/ONSdigital/go-ns v0.0.0-20200205115900-a11716f93bad h1:Axoxm5rF6j7LSZfm4AGBT5IwGhWIcfcOkkhy/su/UpA=
