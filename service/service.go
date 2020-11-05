@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/tls"
 	"github.com/ONSdigital/dp-api-clients-go/zebedee"
 	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -52,12 +53,27 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 
 	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
 	zebedeeClient := zebedee.New(cfg.ZebedeeURL)
-	elasticacheClient, err := dpredis.NewClient(dpredis.Config{
-		Addr:     cfg.ElasticacheAddr,
-		Password: cfg.ElasticachePassword,
-		Database: cfg.ElasticacheDatabase,
-		TTL:      cfg.ElasticacheTTL,
-	})
+
+	var elasticacheClient *dpredis.Client
+	if cfg.EnableTLSConfig {
+		elasticacheClient, err = dpredis.NewClient(dpredis.Config{
+			Addr:     cfg.ElasticacheAddr,
+			Password: cfg.ElasticachePassword,
+			Database: cfg.ElasticacheDatabase,
+			TTL:      cfg.ElasticacheTTL,
+			TLS: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		})
+	} else {
+		elasticacheClient, err = dpredis.NewClient(dpredis.Config{
+			Addr:     cfg.ElasticacheAddr,
+			Password: cfg.ElasticachePassword,
+			Database: cfg.ElasticacheDatabase,
+			TTL:      cfg.ElasticacheTTL,
+		})
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to create elasticache client")
 	}

@@ -17,6 +17,7 @@ type Config struct {
 	ElasticachePassword        string        `envconfig:"ELASTICACHE_PASSWORD"				json:"-"`
 	ElasticacheDatabase        int           `envconfig:"ELASTICACHE_DATABASE"`
 	ElasticacheTTL             time.Duration `envconfig:"ELASTICACHE_TTL"`
+	EnableTLSConfig            bool          `envconfig:"ENABLE_TLS_CONFIG"`
 }
 
 var cfg *Config
@@ -39,6 +40,7 @@ func Get() (*Config, error) {
 		ElasticachePassword:        "default",
 		ElasticacheDatabase:        0,
 		ElasticacheTTL:             30 * time.Minute,
+		EnableTLSConfig:            false,
 	}
 
 	return cfg, envconfig.Process("", cfg)
