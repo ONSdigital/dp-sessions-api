@@ -55,7 +55,7 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 	zebedeeClient := zebedee.New(cfg.ZebedeeURL)
 
 	var elasticacheClient *dpredis.Client
-	if cfg.EnableTLSConfig {
+	if cfg.EnableRedisTLSConfig {
 		elasticacheClient, err = dpredis.NewClient(dpredis.Config{
 			Addr:     cfg.ElasticacheAddr,
 			Password: cfg.ElasticachePassword,
