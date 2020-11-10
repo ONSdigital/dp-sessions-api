@@ -85,6 +85,35 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 	}
 }
 
+// GetByEmailSessionHandlerFunc returns a function that retrieves a session by ID from the cache
+func GetByEmailSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		email := getVarsFunc(r)["Email"]
+
+		s, err := cache.GetByEmail(email)
+		if err != nil {
+			writeErrorResponse(ctx, w, err.Error(), err, getErrorStatus(err))
+			return
+		}
+
+		if s == nil {
+			writeErrorResponse(ctx, w, "session not found", err, http.StatusNotFound)
+			return
+		}
+
+		sessionJSON, err := s.MarshalJSON()
+		if err != nil {
+			writeErrorResponse(ctx, w, "failed to marshal session", err, http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(sessionJSON)
+	}
+}
+
 func DeleteAllSessionsHandlerFunc(cache Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

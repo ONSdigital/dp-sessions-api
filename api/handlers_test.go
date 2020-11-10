@@ -286,6 +286,131 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 	})
 }
 
+func TestGetByEmailSessionHandlerFunc(t *testing.T) {
+	Convey("Given a valid request", t, func() {
+		sessionEmail := "user@test.com"
+		currentTime := time.Now()
+		mockCache := &apiMock.CacheMock{
+			GetByEmailFunc: func(email string) (*session.Session, error) {
+				return &session.Session{
+					ID:    "123",
+					Email: email,
+					Start: currentTime,
+				}, nil
+			},
+		}
+
+		getVars := func(r *http.Request) map[string]string {
+			return map[string]string{
+				"Email": sessionEmail,
+			}
+		}
+
+		sessionHandler := api.GetByEmailSessionHandlerFunc(mockCache, getVars)
+
+		req := httptest.NewRequest(http.MethodGet, "/session/123", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is received", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then expected session is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusOK)
+				So(mockCache.GetByEmailCalls(), ShouldHaveLength, 1)
+				So(mockCache.GetByEmailCalls()[0].Email, ShouldEqual, "user@test.com")
+			})
+		})
+	})
+
+	Convey("Given a request to retrieve a session", t, func() {
+		mockCache := &apiMock.CacheMock{
+			GetByEmailFunc: func(email string) (*session.Session, error) {
+				return nil, SessionNotFound
+			},
+		}
+
+		sessionHandler := api.GetByEmailSessionHandlerFunc(mockCache, getVars("Email", ""))
+
+		req := httptest.NewRequest(http.MethodGet, "/session/user@test.com", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is received", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then an error response is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusNotFound)
+				So(mockCache.GetByEmailCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
+
+	Convey("Given a valid request", t, func() {
+		mockCache := &apiMock.CacheMock{
+			GetByEmailFunc: func(email string) (*session.Session, error) {
+				return nil, nil
+			},
+		}
+
+		sessionHandler := api.GetByEmailSessionHandlerFunc(mockCache, getVars("Email", "user@test.com"))
+
+		req := httptest.NewRequest(http.MethodGet, "/session/user@test.com", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is received", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then an error response is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusNotFound)
+				So(mockCache.GetByEmailCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
+
+	Convey("Given a valid request", t, func() {
+		mockCache := &apiMock.CacheMock{
+			GetByEmailFunc: func(email string) (*session.Session, error) {
+				return nil, SessionExpired
+			},
+		}
+
+		sessionHandler := api.GetByEmailSessionHandlerFunc(mockCache, getVars("Email", "123"))
+
+		req := httptest.NewRequest(http.MethodGet, "/session/123", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is received", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then an error response is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusNotFound)
+				So(mockCache.GetByEmailCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
+
+	Convey("Given a valid request", t, func() {
+		mockCache := &apiMock.CacheMock{
+			GetByEmailFunc: func(email string) (*session.Session, error) {
+				return nil, errors.New("unexpected error")
+			},
+		}
+
+		sessionHandler := api.GetByEmailSessionHandlerFunc(mockCache, getVars("Email", "user@test.com"))
+
+		req := httptest.NewRequest(http.MethodGet, "/session/user@test.com", nil)
+		resp := httptest.NewRecorder()
+
+		Convey("When the request is received", func() {
+			sessionHandler.ServeHTTP(resp, req)
+
+			Convey("Then an error response is returned", func() {
+				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(mockCache.GetByEmailCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
+}
+
 func TestDeleteAllSessionsHandlerFunc(t *testing.T) {
 	Convey("Give a valid request", t, func() {
 		mockCache := &apiMock.CacheMock{DeleteAllFunc: func() error {

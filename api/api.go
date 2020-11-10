@@ -25,6 +25,7 @@ func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler, elastica
 
 	r.HandleFunc("/sessions", permissions.Require(create, CreateSessionHandlerFunc(elasticacheClient))).Methods("POST")
 	r.HandleFunc("/sessions/{ID}", GetByIDSessionHandlerFunc(elasticacheClient, mux.Vars)).Methods("GET")
+	r.HandleFunc("/sessions/{Email}", GetByEmailSessionHandlerFunc(elasticacheClient, mux.Vars)).Methods("GET")
 	r.HandleFunc("/sessions", permissions.Require(delete, DeleteAllSessionsHandlerFunc(elasticacheClient))).Methods("DELETE")
 	return api
 }

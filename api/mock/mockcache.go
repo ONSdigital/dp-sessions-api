@@ -11,6 +11,7 @@ import (
 
 var (
 	lockCacheMockDeleteAll  sync.RWMutex
+	lockCacheMockGetByEmail sync.RWMutex
 	lockCacheMockGetByID    sync.RWMutex
 	lockCacheMockSetSession sync.RWMutex
 )
@@ -28,6 +29,9 @@ var _ api.Cache = &CacheMock{}
 //             DeleteAllFunc: func() error {
 // 	               panic("mock out the DeleteAll method")
 //             },
+//             GetByEmailFunc: func(email string) (*session.Session, error) {
+// 	               panic("mock out the GetByEmail method")
+//             },
 //             GetByIDFunc: func(ID string) (*session.Session, error) {
 // 	               panic("mock out the GetByID method")
 //             },
@@ -44,6 +48,9 @@ type CacheMock struct {
 	// DeleteAllFunc mocks the DeleteAll method.
 	DeleteAllFunc func() error
 
+	// GetByEmailFunc mocks the GetByEmail method.
+	GetByEmailFunc func(email string) (*session.Session, error)
+
 	// GetByIDFunc mocks the GetByID method.
 	GetByIDFunc func(ID string) (*session.Session, error)
 
@@ -54,6 +61,11 @@ type CacheMock struct {
 	calls struct {
 		// DeleteAll holds details about calls to the DeleteAll method.
 		DeleteAll []struct {
+		}
+		// GetByEmail holds details about calls to the GetByEmail method.
+		GetByEmail []struct {
+			// Email is the email argument value.
+			Email string
 		}
 		// GetByID holds details about calls to the GetByID method.
 		GetByID []struct {
@@ -91,6 +103,37 @@ func (mock *CacheMock) DeleteAllCalls() []struct {
 	lockCacheMockDeleteAll.RLock()
 	calls = mock.calls.DeleteAll
 	lockCacheMockDeleteAll.RUnlock()
+	return calls
+}
+
+// GetByEmail calls GetByEmailFunc.
+func (mock *CacheMock) GetByEmail(email string) (*session.Session, error) {
+	if mock.GetByEmailFunc == nil {
+		panic("CacheMock.GetByEmailFunc: method is nil but Cache.GetByEmail was just called")
+	}
+	callInfo := struct {
+		Email string
+	}{
+		Email: email,
+	}
+	lockCacheMockGetByEmail.Lock()
+	mock.calls.GetByEmail = append(mock.calls.GetByEmail, callInfo)
+	lockCacheMockGetByEmail.Unlock()
+	return mock.GetByEmailFunc(email)
+}
+
+// GetByEmailCalls gets all the calls that were made to GetByEmail.
+// Check the length with:
+//     len(mockedCache.GetByEmailCalls())
+func (mock *CacheMock) GetByEmailCalls() []struct {
+	Email string
+} {
+	var calls []struct {
+		Email string
+	}
+	lockCacheMockGetByEmail.RLock()
+	calls = mock.calls.GetByEmail
+	lockCacheMockGetByEmail.RUnlock()
 	return calls
 }
 

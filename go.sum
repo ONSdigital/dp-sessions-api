@@ -32,16 +32,6 @@ github.com/ONSdigital/dp-rchttp v0.0.0-20200114090501-463a529590e8 h1:MWIHCr/ud5
 github.com/ONSdigital/dp-rchttp v0.0.0-20200114090501-463a529590e8/go.mod h1:821jZtK0oBsV8hjIkNr8vhAWuv0FxJBPJuAHa2B70Gk=
 github.com/ONSdigital/dp-rchttp v1.0.0 h1:K/1/gDtfMZCX1Mbmq80nZxzDirzneqA1c89ea26FqP4=
 github.com/ONSdigital/dp-rchttp v1.0.0/go.mod h1:821jZtK0oBsV8hjIkNr8vhAWuv0FxJBPJuAHa2B70Gk=
-github.com/ONSdigital/dp-redis v0.1.0 h1:twdLQwCO6cdaLKwGKsh8WpCtXsn3AVqPOQGh5ybENBY=
-github.com/ONSdigital/dp-redis v0.1.0/go.mod h1:HVAzhdywQg6Yuu9Hd4Zg0YOOUDHUHM/je6Ne9f4FwCs=
-github.com/ONSdigital/dp-redis v0.1.1-0.20201021151824-9adb7ba2e879 h1:Q/ADIvy4H8jwt3tBRb2kjJ4V6STy7GNTEtBuz+XAHUI=
-github.com/ONSdigital/dp-redis v0.1.1-0.20201021151824-9adb7ba2e879/go.mod h1:HVAzhdywQg6Yuu9Hd4Zg0YOOUDHUHM/je6Ne9f4FwCs=
-github.com/ONSdigital/dp-redis v0.1.1-0.20201022125855-9be9f01a5810 h1:TDqOBn9y2g7LFhnAwqQjY1a31j2sbFW7eBGGZHrqlxE=
-github.com/ONSdigital/dp-redis v0.1.1-0.20201022125855-9be9f01a5810/go.mod h1:HVAzhdywQg6Yuu9Hd4Zg0YOOUDHUHM/je6Ne9f4FwCs=
-github.com/ONSdigital/dp-redis v0.1.1-0.20201105150102-768df9d1e4b9 h1:HJzhAGPqykwFoXPmEeL9YjAiUeplVDTv/inK6LSEVpE=
-github.com/ONSdigital/dp-redis v0.1.1-0.20201105150102-768df9d1e4b9/go.mod h1:HVAzhdywQg6Yuu9Hd4Zg0YOOUDHUHM/je6Ne9f4FwCs=
-github.com/ONSdigital/dp-redis v0.1.1-0.20201105154625-374eb8ee843a h1:OMqSFj9OEBhQ3t9HRsk62TEAFJ8i3ducWwAIHEBwv6I=
-github.com/ONSdigital/dp-redis v0.1.1-0.20201105154625-374eb8ee843a/go.mod h1:HVAzhdywQg6Yuu9Hd4Zg0YOOUDHUHM/je6Ne9f4FwCs=
 github.com/ONSdigital/dp-redis v1.0.0 h1:UqNJlzywe6ia1JpeaTIbRAsqHuaPU79af8YnMT+hSYw=
 github.com/ONSdigital/dp-redis v1.0.0/go.mod h1:HVAzhdywQg6Yuu9Hd4Zg0YOOUDHUHM/je6Ne9f4FwCs=
 github.com/ONSdigital/dp-sessions-api v0.2.0/go.mod h1:AGACIcN8ZHWuPU3XsES8w311YIb+pVCduTJiR6BUgzQ=
