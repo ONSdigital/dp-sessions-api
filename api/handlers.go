@@ -15,7 +15,7 @@ import (
 type GetVarsFunc func(r *http.Request) map[string]string
 
 // CreateSessionHandlerFunc returns a function that generates a session. Method = "POST"
-func CreateSessionHandlerFunc(sessionUpdater SessionUpdater, cache Cache) http.HandlerFunc {
+func CreateSessionHandlerFunc(cache Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -31,13 +31,13 @@ func CreateSessionHandlerFunc(sessionUpdater SessionUpdater, cache Cache) http.H
 			return
 		}
 
-		s, err := sessionUpdater.Update(c.Email)
+		s, err := session.NewSession().Update(c.Email)
 		if err != nil {
 			writeErrorResponse(ctx, w, "failed to create session", err, http.StatusInternalServerError)
 			return
 		}
 
-		if err := cache.Set(s); err != nil {
+		if err := cache.SetSession(s); err != nil {
 			writeErrorResponse(ctx, w, "unable to add session to cache", err, http.StatusInternalServerError)
 			return
 		}
@@ -63,6 +63,35 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 		ID := getVarsFunc(r)["ID"]
 
 		s, err := cache.GetByID(ID)
+		if err != nil {
+			writeErrorResponse(ctx, w, err.Error(), err, getErrorStatus(err))
+			return
+		}
+
+		if s == nil {
+			writeErrorResponse(ctx, w, "session not found", err, http.StatusNotFound)
+			return
+		}
+
+		sessionJSON, err := s.MarshalJSON()
+		if err != nil {
+			writeErrorResponse(ctx, w, "failed to marshal session", err, http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(sessionJSON)
+	}
+}
+
+// GetByEmailSessionHandlerFunc returns a function that retrieves a session by ID from the cache
+func GetByEmailSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		email := getVarsFunc(r)["Email"]
+
+		s, err := cache.GetByEmail(email)
 		if err != nil {
 			writeErrorResponse(ctx, w, err.Error(), err, getErrorStatus(err))
 			return

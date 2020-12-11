@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"crypto/tls"
 	"github.com/ONSdigital/dp-api-clients-go/zebedee"
 	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	rchttp "github.com/ONSdigital/dp-net/http"
+	dpredis "github.com/ONSdigital/dp-redis"
 	"github.com/ONSdigital/dp-sessions-api/api"
 	"github.com/ONSdigital/dp-sessions-api/config"
 	"github.com/ONSdigital/go-ns/server"
@@ -40,8 +42,6 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 
 	permissions := getAuthorisationHandlers(cfg)
 
-	a := api.Setup(ctx, r, permissions)
-
 	versionInfo, err := healthcheck.NewVersionInfo(
 		buildTime,
 		gitCommit,
@@ -54,12 +54,38 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
 	zebedeeClient := zebedee.New(cfg.ZebedeeURL)
 
-	if err := registerCheckers(ctx, &hc, zebedeeClient); err != nil {
+	var elasticacheClient *dpredis.Client
+	if cfg.EnableRedisTLSConfig {
+		elasticacheClient, err = dpredis.NewClient(dpredis.Config{
+			Addr:     cfg.ElasticacheAddr,
+			Password: cfg.ElasticachePassword,
+			Database: cfg.ElasticacheDatabase,
+			TTL:      cfg.ElasticacheTTL,
+			TLS: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		})
+	} else {
+		elasticacheClient, err = dpredis.NewClient(dpredis.Config{
+			Addr:     cfg.ElasticacheAddr,
+			Password: cfg.ElasticachePassword,
+			Database: cfg.ElasticacheDatabase,
+			TTL:      cfg.ElasticacheTTL,
+		})
+	}
+
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to create elasticache client")
+	}
+
+	if err := registerCheckers(ctx, &hc, zebedeeClient, elasticacheClient); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 	r.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
 
 	hc.Start(ctx)
+
+	a := api.Setup(ctx, r, permissions, elasticacheClient)
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
@@ -95,12 +121,17 @@ func (svc *Service) Close(ctx context.Context) {
 	log.Event(ctx, "graceful shutdown complete", log.INFO)
 }
 
-func registerCheckers(ctx context.Context, hc *healthcheck.HealthCheck, zebedeeClient *zebedee.Client) (err error) {
+func registerCheckers(ctx context.Context, hc *healthcheck.HealthCheck, zebedeeClient *zebedee.Client, elasticacheClient *dpredis.Client) (err error) {
 	hasErrors := false
 
 	if err = hc.AddCheck("Zebedee", zebedeeClient.Checker); err != nil {
 		hasErrors = true
 		log.Event(ctx, "error adding check for zebedeee", log.ERROR, log.Error(err))
+	}
+
+	if err = hc.AddCheck("Elasticache", elasticacheClient.Checker); err != nil {
+		hasErrors = true
+		log.Event(ctx, "error adding check for elasticache", log.ERROR, log.Error(err))
 	}
 
 	if hasErrors {

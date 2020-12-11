@@ -15,7 +15,7 @@ paths:
   /sessions:
     post:
       security:
-        - ServiceToken: []
+        - ServiceToken: [ ]
       tags:
         - session
       summary: Create a session endpoint
@@ -43,7 +43,7 @@ paths:
           description: Internal Server Error
     delete:
       security:
-        - ServiceToken: []
+        - ServiceToken: [ ]
       tags:
         - session
       summary: Delete all sessions
@@ -82,6 +82,29 @@ paths:
           description: Not Found
         500:
           description: Internal Server Error
+  /sessions/{Email}:
+      get:
+        tags:
+          - session
+        summary: Get a session by ID endpoint
+        description: Gets an existing session by the provided ID.
+        parameters:
+          - in: path
+            name: ID
+            type: string
+            required: true
+            description: ID of stored session
+        produces:
+          - application/json
+        responses:
+          200:
+            description: OK
+            schema:
+              $ref: "#/definitions/Session"
+          404:
+            description: Not Found
+          500:
+            description: Internal Server Error
 
 securityDefinitions:
   ServiceToken:

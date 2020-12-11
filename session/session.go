@@ -15,7 +15,7 @@ type Session struct {
 	ID           string    `json:"id"`
 	Email        string    `json:"email"`
 	Start        time.Time `json:"start"`
-	LastAccessed time.Time `json:"lastAccessed"`
+	LastAccessed time.Time `json:"last_accessed"`
 }
 
 // NewSessionDetails is the structure of the request needed to create a session
@@ -55,8 +55,8 @@ func (s *Session) Update(email string) (*Session, error) {
 	return &Session{
 		ID:           id,
 		Email:        email,
-		Start:        time.Now(),
-		LastAccessed: time.Now(),
+		Start:        time.Now().UTC(),
+		LastAccessed: time.Now().UTC(),
 	}, nil
 }
 

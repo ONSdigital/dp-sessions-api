@@ -22,7 +22,8 @@ type SessionUpdater interface {
 
 // Cache interface for storing and retrieving sessions
 type Cache interface {
-	Set(s *session.Session) error
+	SetSession(s *session.Session) error
 	GetByID(ID string) (*session.Session, error)
+	GetByEmail(email string) (*session.Session, error)
 	DeleteAll() error
 }

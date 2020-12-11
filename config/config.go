@@ -13,6 +13,11 @@ type Config struct {
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
 	ZebedeeURL                 string        `envconfig:"ZEBEDEE_URL"`
 	ServiceAuthToken           string        `envconfig:"SERVICE_AUTH_TOKEN"				json:"-"`
+	ElasticacheAddr            string        `envconfig:"ELASTICACHE_ADDR"`
+	ElasticachePassword        string        `envconfig:"ELASTICACHE_PASSWORD"				json:"-"`
+	ElasticacheDatabase        int           `envconfig:"ELASTICACHE_DATABASE"`
+	ElasticacheTTL             time.Duration `envconfig:"ELASTICACHE_TTL"`
+	EnableRedisTLSConfig       bool          `envconfig:"ENABLE_REDIS_TLS_CONFIG"`
 }
 
 var cfg *Config
@@ -31,6 +36,11 @@ func Get() (*Config, error) {
 		HealthCheckCriticalTimeout: 90 * time.Second,
 		ZebedeeURL:                 "http://localhost:8082",
 		ServiceAuthToken:           "",
+		ElasticacheAddr:            "localhost:6379",
+		ElasticachePassword:        "default",
+		ElasticacheDatabase:        0,
+		ElasticacheTTL:             30 * time.Minute,
+		EnableRedisTLSConfig:       false,
 	}
 
 	return cfg, envconfig.Process("", cfg)
