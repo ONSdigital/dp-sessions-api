@@ -64,7 +64,7 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 
 		s, err := cache.GetByID(ID)
 		if err != nil {
-			writeErrorResponse(ctx, w, err.Error(), err, getErrorStatus(err))
+			writeErrorResponse(ctx, w, err.Error(), err, http.StatusNotFound)
 			return
 		}
 
@@ -93,7 +93,7 @@ func GetByEmailSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Han
 
 		s, err := cache.GetByEmail(email)
 		if err != nil {
-			writeErrorResponse(ctx, w, err.Error(), err, getErrorStatus(err))
+			writeErrorResponse(ctx, w, err.Error(), err, http.StatusNotFound)
 			return
 		}
 
