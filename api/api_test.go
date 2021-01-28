@@ -2,7 +2,9 @@ package api_test
 
 import (
 	"context"
-	dpredis "github.com/ONSdigital/dp-redis"
+
+	"github.com/ONSdigital/dp-sessions-api/cache"
+
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -23,7 +25,7 @@ var (
 func TestSetup(t *testing.T) {
 	Convey("Given an API instance", t, func() {
 		p := &auth.NopHandler{}
-		c := &dpredis.Client{}
+		c := &cache.ElasticacheClient{}
 		a := GetAPIWithMocks(p, c)
 
 		Convey("When created the following routes should have been added", func() {
@@ -44,7 +46,7 @@ func TestClose(t *testing.T) {
 				}
 			},
 		}
-		c := &dpredis.Client{}
+		c := &cache.ElasticacheClient{}
 		a := GetAPIWithMocks(p, c)
 
 		Convey("When the api is closed any dependencies are closed also", func() {
@@ -56,7 +58,7 @@ func TestClose(t *testing.T) {
 }
 
 // GetAPIWithMocks also used in other tests
-func GetAPIWithMocks(authMock api.AuthHandler, elasticacheClient *dpredis.Client) *api.API {
+func GetAPIWithMocks(authMock api.AuthHandler, elasticacheClient *cache.ElasticacheClient) *api.API {
 	mu.Lock()
 	defer mu.Unlock()
 	return api.Setup(testContext, mux.NewRouter(), authMock, elasticacheClient)
