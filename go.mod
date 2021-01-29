@@ -7,8 +7,6 @@ require (
 	github.com/ONSdigital/dp-authorisation v0.1.0
 	github.com/ONSdigital/dp-healthcheck v1.0.5
 	github.com/ONSdigital/dp-net v1.0.11
-	//github.com/ONSdigital/dp-redis v1.0.0
-	//github.com/ONSdigital/dp-redis-clients-go v1.0.1-0.20210128140539-860e6143c229
 	github.com/ONSdigital/go-ns v0.0.0-20200902154605-290c8b5ba5eb
 	github.com/ONSdigital/log.go v1.0.1
 	github.com/fatih/color v1.10.0 // indirect
