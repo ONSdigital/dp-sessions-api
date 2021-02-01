@@ -279,7 +279,7 @@ func TestGetByIDSessionHandlerFunc(t *testing.T) {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then an error response is returned", func() {
-				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(resp.Code, ShouldEqual, http.StatusNotFound)
 				So(mockCache.GetByIDCalls(), ShouldHaveLength, 1)
 			})
 		})
@@ -404,7 +404,7 @@ func TestGetByEmailSessionHandlerFunc(t *testing.T) {
 			sessionHandler.ServeHTTP(resp, req)
 
 			Convey("Then an error response is returned", func() {
-				So(resp.Code, ShouldEqual, http.StatusInternalServerError)
+				So(resp.Code, ShouldEqual, http.StatusNotFound)
 				So(mockCache.GetByEmailCalls(), ShouldHaveLength, 1)
 			})
 		})
