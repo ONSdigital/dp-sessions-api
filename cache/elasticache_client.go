@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	HealthyMessage       = "redis is OK"
+	HealthyMessage       = "elasticache is OK"
 	ErrEmptySessionID    = errors.New("session id required but was empty")
 	ErrEmptySessionEmail = errors.New("session email required but was empty")
 	ErrEmptySession      = errors.New("session is empty")
@@ -28,16 +28,16 @@ type ElasticacheClient struct {
 	ttl    time.Duration
 }
 
-// Config - config options for the redis client
+// Config - config options for the elasticache client
 type Config struct {
 	Addr     string
-	Password string
+	Password string `json:"-"`
 	Database int
 	TTL      time.Duration
 	TLS      *tls.Config
 }
 
-// New - returns new session cache instance
+// New - create new session cache client instance
 func New(c Config) (*ElasticacheClient, error) {
 	if c.Addr == "" {
 		return nil, ErrEmptyAddress
@@ -62,7 +62,7 @@ func New(c Config) (*ElasticacheClient, error) {
 	}, nil
 }
 
-// SetSession - add session to redis
+// SetSession - add session to elasticache
 func (c *ElasticacheClient) SetSession(s *session.Session) error {
 	if s == nil {
 		return ErrEmptySession
@@ -76,19 +76,19 @@ func (c *ElasticacheClient) SetSession(s *session.Session) error {
 	// Add session using ID as key
 	err = c.client.Set(s.ID, sJSON, c.ttl).Err()
 	if err != nil {
-		return fmt.Errorf("redis client.Set returned an unexpected error: %w", err)
+		return fmt.Errorf("elasticache client.Set returned an unexpected error: %w", err)
 	}
 
 	// Add session using email as key
 	err = c.client.Set(s.Email, sJSON, c.ttl).Err()
 	if err != nil {
-		return fmt.Errorf("redis client.Set returned an unexpected error: %w", err)
+		return fmt.Errorf("elasticache client.Set returned an unexpected error: %w", err)
 	}
 
 	return nil
 }
 
-// GetByID - gets a session from redis using its ID
+// GetByID - gets a session from elasticache using its ID
 func (c *ElasticacheClient) GetByID(id string) (*session.Session, error) {
 	if id == "" {
 		return nil, ErrEmptySessionID
@@ -121,7 +121,7 @@ func (c *ElasticacheClient) GetByID(id string) (*session.Session, error) {
 	return s, nil
 }
 
-// GetByEmail - gets a session from redis using its ID
+// GetByEmail - gets a session from elasticache using its ID
 func (c *ElasticacheClient) GetByEmail(email string) (*session.Session, error) {
 	if email == "" {
 		return nil, ErrEmptySessionEmail
@@ -154,12 +154,12 @@ func (c *ElasticacheClient) GetByEmail(email string) (*session.Session, error) {
 	return s, nil
 }
 
-// DeleteAll - removes all items from redis
+// DeleteAll - removes all items from elasticache
 func (c *ElasticacheClient) DeleteAll() error {
 	return c.client.FlushAll().Err()
 }
 
-// Ping - checks the connection to redis
+// Ping - checks the connection to elasticache
 func (c *ElasticacheClient) Ping() error {
 	return c.client.Ping().Err()
 }
