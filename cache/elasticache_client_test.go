@@ -156,7 +156,7 @@ func TestClient_Set(t *testing.T) {
 				So(mockRedisClient.SetCalls()[0].Expiration, ShouldEqual, testTTL)
 
 				So(err, ShouldNotBeEmpty)
-				So(err.Error(), ShouldEqual, "redis client.Set returned an unexpected error: failed to store session")
+				So(err.Error(), ShouldEqual, "elasticache client.Set returned an unexpected error: failed to store session")
 			})
 		})
 	})
