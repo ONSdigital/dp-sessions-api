@@ -19,7 +19,7 @@ const (
 type GetVarsFunc func(r *http.Request) map[string]string
 
 // CreateSessionHandlerFunc returns a function that generates a session. Method = "POST"
-func CreateSessionHandlerFunc(cache Cache) http.HandlerFunc {
+func CreateSessionHandlerFunc(sessionCache Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -41,7 +41,7 @@ func CreateSessionHandlerFunc(cache Cache) http.HandlerFunc {
 			return
 		}
 
-		if err := cache.SetSession(s); err != nil {
+		if err := sessionCache.SetSession(s); err != nil {
 			writeErrorResponse(ctx, w, "unable to add session to cache", err, http.StatusInternalServerError)
 			return
 		}
