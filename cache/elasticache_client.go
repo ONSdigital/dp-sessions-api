@@ -21,6 +21,7 @@ var (
 	ErrEmptyAddress      = errors.New("address is empty")
 	ErrEmptyPassword     = errors.New("password is empty")
 	ErrInvalidTTL        = errors.New("ttl should not be zero")
+	ErrSessionNotFound   = errors.New("session not found")
 )
 
 type ElasticacheClient struct {
@@ -88,7 +89,8 @@ func (c *ElasticacheClient) SetSession(s *session.Session) error {
 	return nil
 }
 
-// GetByID - gets a session from elasticache using its ID
+// GetByID - gets a session from elasticache by the Session ID.
+// Returns cache.ErrSessionNotFound if the session is not found in the cache.
 func (c *ElasticacheClient) GetByID(id string) (*session.Session, error) {
 	if id == "" {
 		return nil, ErrEmptySessionID
@@ -96,6 +98,9 @@ func (c *ElasticacheClient) GetByID(id string) (*session.Session, error) {
 
 	msg, err := c.client.Get(id).Result()
 	if err != nil {
+		if err == redis.Nil {
+			return nil, ErrSessionNotFound
+		}
 		return nil, err
 	}
 
@@ -129,6 +134,9 @@ func (c *ElasticacheClient) GetByEmail(email string) (*session.Session, error) {
 
 	msg, err := c.client.Get(email).Result()
 	if err != nil {
+		if err == redis.Nil {
+			return nil, ErrSessionNotFound
+		}
 		return nil, err
 	}
 
