@@ -90,7 +90,7 @@ func (c *ElasticacheClient) SetSession(s *session.Session) error {
 }
 
 // GetByID - gets a session from elasticache by the Session ID.
-// Returns cache.ErrSessionNotFound if the session is not found in the cache.
+// Returns cache.ErrSessionNotFound if the session with the specified ID does not exist.
 func (c *ElasticacheClient) GetByID(id string) (*session.Session, error) {
 	if id == "" {
 		return nil, ErrEmptySessionID
@@ -126,7 +126,8 @@ func (c *ElasticacheClient) GetByID(id string) (*session.Session, error) {
 	return s, nil
 }
 
-// GetByEmail - gets a session from elasticache using its ID
+// GetByEmail - gets a session from elasticache by the email address.
+// Returns cache.ErrSessionNotFound if a session with the specified email does not exist.
 func (c *ElasticacheClient) GetByEmail(email string) (*session.Session, error) {
 	if email == "" {
 		return nil, ErrEmptySessionEmail

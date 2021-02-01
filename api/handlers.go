@@ -3,12 +3,16 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 
-	. "github.com/ONSdigital/dp-sessions-api/errors"
+	"github.com/ONSdigital/dp-sessions-api/cache"
 	"github.com/ONSdigital/dp-sessions-api/session"
 	"github.com/ONSdigital/log.go/log"
+)
+
+const (
+	internalServerErr  = "internal server error"
+	sessionNotFoundErr = "session not found"
 )
 
 // GetVarsFunc is a helper function that returns a map of request variables and parameters
@@ -57,25 +61,30 @@ func CreateSessionHandlerFunc(cache Cache) http.HandlerFunc {
 }
 
 // GetByIDSessionHandlerFunc returns a function that retrieves a session by ID from the cache
-func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
+func GetByIDSessionHandlerFunc(sessionCache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		ID := getVarsFunc(r)["ID"]
 
-		s, err := cache.GetByID(ID)
+		s, err := sessionCache.GetByID(ID)
 		if err != nil {
-			writeErrorResponse(ctx, w, err.Error(), err, http.StatusNotFound)
+			if err == cache.ErrSessionNotFound {
+				writeErrorResponse(ctx, w, sessionNotFoundErr, err, http.StatusNotFound)
+				return
+			}
+
+			writeErrorResponse(ctx, w, internalServerErr, err, http.StatusInternalServerError)
 			return
 		}
 
 		if s == nil {
-			writeErrorResponse(ctx, w, "session not found", err, http.StatusNotFound)
+			writeErrorResponse(ctx, w, internalServerErr, err, http.StatusInternalServerError)
 			return
 		}
 
 		sessionJSON, err := s.MarshalJSON()
 		if err != nil {
-			writeErrorResponse(ctx, w, "failed to marshal session", err, http.StatusInternalServerError)
+			writeErrorResponse(ctx, w, internalServerErr, err, http.StatusInternalServerError)
 			return
 		}
 
@@ -86,25 +95,30 @@ func GetByIDSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.Handle
 }
 
 // GetByEmailSessionHandlerFunc returns a function that retrieves a session by ID from the cache
-func GetByEmailSessionHandlerFunc(cache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
+func GetByEmailSessionHandlerFunc(sessionCache Cache, getVarsFunc GetVarsFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		email := getVarsFunc(r)["Email"]
 
-		s, err := cache.GetByEmail(email)
+		s, err := sessionCache.GetByEmail(email)
 		if err != nil {
-			writeErrorResponse(ctx, w, err.Error(), err, http.StatusNotFound)
+			if err == cache.ErrSessionNotFound {
+				writeErrorResponse(ctx, w, sessionNotFoundErr, err, http.StatusNotFound)
+				return
+			}
+
+			writeErrorResponse(ctx, w, internalServerErr, err, http.StatusInternalServerError)
 			return
 		}
 
 		if s == nil {
-			writeErrorResponse(ctx, w, "session not found", err, http.StatusNotFound)
+			writeErrorResponse(ctx, w, internalServerErr, err, http.StatusInternalServerError)
 			return
 		}
 
 		sessionJSON, err := s.MarshalJSON()
 		if err != nil {
-			writeErrorResponse(ctx, w, "failed to marshal session", err, http.StatusInternalServerError)
+			writeErrorResponse(ctx, w, internalServerErr, err, http.StatusInternalServerError)
 			return
 		}
 
@@ -130,22 +144,10 @@ func DeleteAllSessionsHandlerFunc(cache Cache) http.HandlerFunc {
 
 func writeErrorResponse(ctx context.Context, w http.ResponseWriter, msg string, err error, status int) {
 	if err != nil {
-		log.Event(ctx, msg, log.Error(err), log.ERROR)
+		log.Event(ctx, err.Error(), log.Error(err), log.ERROR)
 	} else {
 		log.Event(ctx, msg, log.ERROR)
 	}
-	http.Error(w, msg, status)
-}
 
-func getErrorStatus(err error) int {
-	var status int
-	switch {
-	case errors.Is(err, SessionNotFound):
-		status = http.StatusNotFound
-	case errors.Is(err, SessionExpired):
-		status = http.StatusNotFound
-	default:
-		status = http.StatusInternalServerError
-	}
-	return status
+	http.Error(w, msg, status)
 }
