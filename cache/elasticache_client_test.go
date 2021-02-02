@@ -13,6 +13,8 @@ import (
 const (
 	testTTL          = 30 * time.Minute
 	respLastAccessed = "2020-08-13T08:40:18.652Z"
+	testEmail        = "user@email.com"
+	testSessionID    = "1234"
 )
 
 var (
@@ -25,7 +27,7 @@ func TestNewClient(t *testing.T) {
 		Convey("When correct redis configuration is provided", func() {
 			c, err := New(Config{
 				Addr:     "123.0.0.1",
-				Password: "1234",
+				Password: testSessionID,
 				Database: 0,
 				TTL:      testTTL,
 			})
@@ -43,7 +45,7 @@ func TestNewClient(t *testing.T) {
 		Convey("When the redis configurations address is empty", func() {
 			c, err := New(Config{
 				Addr:     "",
-				Password: "1234",
+				Password: testSessionID,
 				Database: 0,
 				TTL:      testTTL,
 			})
@@ -81,7 +83,7 @@ func TestNewClient(t *testing.T) {
 		Convey("When the redis configurations ttl is zero", func() {
 			c, err := New(Config{
 				Addr:     "123.0.0.1",
-				Password: "1234",
+				Password: testSessionID,
 				Database: 0,
 				TTL:      0,
 			})
@@ -98,16 +100,16 @@ func TestNewClient(t *testing.T) {
 func TestClient_Set(t *testing.T) {
 	Convey("Given a valid sessions and redis client.Set returns no error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusResult("success", nil),
-			*redis.NewStringCmd(),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusResult("success", nil),
+			redis.NewStringCmd(),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When there is a valid session", func() {
 			s := &session.Session{
-				ID:           "1234",
-				Email:        "user@email.com",
+				ID:           testSessionID,
+				Email:        testEmail,
 				Start:        time.Now(),
 				LastAccessed: time.Now(),
 			}
@@ -130,16 +132,16 @@ func TestClient_Set(t *testing.T) {
 
 	Convey("Given a valid session and redis client.Set returns an error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusResult("fail", errors.New("failed to store session")),
-			*redis.NewStringCmd(),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusResult("fail", errors.New("failed to store session")),
+			redis.NewStringCmd(),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When there is a valid session but redis client.Set errors ", func() {
 			s := &session.Session{
-				ID:           "1234",
-				Email:        "user@email.com",
+				ID:           testSessionID,
+				Email:        testEmail,
 				Start:        time.Now(),
 				LastAccessed: time.Now(),
 			}
@@ -163,10 +165,10 @@ func TestClient_Set(t *testing.T) {
 
 	Convey("Given an invalid session and redis client.Set returns an error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringCmd(),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusCmd(),
+			redis.NewStringCmd(),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When there is an invalid session", func() {
@@ -180,37 +182,63 @@ func TestClient_Set(t *testing.T) {
 			})
 		})
 	})
+
+	Convey("Given client.Set returns an error adding the Session ID to the cache", t, func() {
+		mockRedisClient, client := setUpMocks(
+			redis.NewStatusResult("", errors.New("Kapow!")),
+			nil,
+			nil,
+			nil,
+		)
+
+		Convey("When cache.SetSession is called", func() {
+			s := &session.Session{
+				ID:           testSessionID,
+				Email:        testEmail,
+				Start:        time.Now(),
+				LastAccessed: time.Now(),
+			}
+
+			err := client.SetSession(s)
+
+			Convey("Then the expected error is returned", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldStartWith, "elasticache client.Set returned an unexpected error")
+				So(mockRedisClient.SetCalls(), ShouldHaveLength, 1)
+			})
+		})
+	})
 }
 
 func TestClient_GetByID(t *testing.T) {
 	Convey("Given a session ID client.GetByID returns a session and TTL is refreshed", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringResult(string(resp), nil),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusCmd(),
+			redis.NewStringResult(string(resp), nil),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When client uses the ID to get the session", func() {
-			s, err := client.GetByID("1234")
+			s, err := client.GetByID(testSessionID)
 			So(err, ShouldBeNil)
 
 			Convey("Then redis client.Get is called with the expected parameters", func() {
 				So(mockRedisClient.GetCalls(), ShouldHaveLength, 1)
-				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, "1234")
+				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, testSessionID)
 
 				So(mockRedisClient.ExpireCalls(), ShouldHaveLength, 2) // Expects 2 due to refreshing by ID and Email
 
-				So(mockRedisClient.ExpireCalls()[0].Key, ShouldEqual, "1234")
+				So(mockRedisClient.ExpireCalls()[0].Key, ShouldEqual, testSessionID)
 				So(mockRedisClient.ExpireCalls()[0].Expiration, ShouldEqual, testTTL)
 
-				So(mockRedisClient.ExpireCalls()[1].Key, ShouldEqual, "user@email.com")
+				So(mockRedisClient.ExpireCalls()[1].Key, ShouldEqual, testEmail)
 				So(mockRedisClient.ExpireCalls()[1].Expiration, ShouldEqual, testTTL)
 			})
 
 			Convey("And the expected session is returned", func() {
 				So(s, ShouldNotBeEmpty)
-				So(s.ID, ShouldEqual, "1234")
+				So(s.ID, ShouldEqual, testSessionID)
 				So(s.LastAccessed.String(), ShouldNotEqual, respLastAccessed)
 				So(mockRedisClient.ExpireCalls()[0].Expiration, ShouldEqual, testTTL)
 			})
@@ -219,18 +247,18 @@ func TestClient_GetByID(t *testing.T) {
 
 	Convey("Given a session ID client.GetByID returns an error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringResult(string(resp), nil),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolResult(false, errors.New("unable to refresh expiration")),
+			redis.NewStatusCmd(),
+			redis.NewStringResult(string(resp), nil),
+			redis.NewStatusCmd(),
+			redis.NewBoolResult(false, errors.New("unable to refresh expiration")),
 		)
 
 		Convey("When client uses the ID to get the session", func() {
-			s, err := client.GetByID("1234")
+			s, err := client.GetByID(testSessionID)
 
 			Convey("Then redis client.Get is called with the expected parameters", func() {
 				So(mockRedisClient.GetCalls(), ShouldHaveLength, 1)
-				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, "1234")
+				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, testSessionID)
 				So(mockRedisClient.ExpireCalls(), ShouldHaveLength, 1)
 			})
 
@@ -242,12 +270,36 @@ func TestClient_GetByID(t *testing.T) {
 		})
 	})
 
+	Convey("Given client.GetByID returns not found error", t, func() {
+		mockRedisClient, client := setUpMocks(
+			nil,
+			redis.NewStringResult("", redis.Nil),
+			nil,
+			nil,
+		)
+
+		Convey("When client.GetByID is called", func() {
+			s, err := client.GetByID(testSessionID)
+
+			Convey("Then error.SessionNotFound", func() {
+				So(err, ShouldEqual, ErrSessionNotFound)
+				So(s, ShouldBeNil)
+			})
+
+			Convey("And the redis client is called with the expected parameters", func() {
+				So(mockRedisClient.GetCalls(), ShouldHaveLength, 1)
+				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, testSessionID)
+				So(mockRedisClient.ExpireCalls(), ShouldHaveLength, 0)
+			})
+		})
+	})
+
 	Convey("Given a blank session ID client.GetByID returns an error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringCmd(),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusCmd(),
+			redis.NewStringCmd(),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When client.GetByID is called has an empty ID", func() {
@@ -264,14 +316,14 @@ func TestClient_GetByID(t *testing.T) {
 
 	Convey("Given a session ID client.GetByID returns an error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringResult("", errors.New("unexpected end of JSON input")),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusCmd(),
+			redis.NewStringResult("", errors.New("unexpected end of JSON input")),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When client.GetByID is called with a valid session ID", func() {
-			s, err := client.GetByID("1234")
+			s, err := client.GetByID(testSessionID)
 
 			Convey("Then the redis client.Get returns an error and no session is returned", func() {
 				So(mockRedisClient.GetCalls(), ShouldHaveLength, 1)
@@ -286,32 +338,32 @@ func TestClient_GetByID(t *testing.T) {
 func TestClient_GetByEmail(t *testing.T) {
 	Convey("Given a session email client.GetByEmail returns a session and TTL is refreshed", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringResult(string(resp), nil),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusCmd(),
+			redis.NewStringResult(string(resp), nil),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When client uses the email to get the session", func() {
-			s, err := client.GetByEmail("user@email.com")
+			s, err := client.GetByEmail(testEmail)
 			So(err, ShouldBeNil)
 
 			Convey("Then redis client.Get is called with the expected parameters", func() {
 				So(mockRedisClient.GetCalls(), ShouldHaveLength, 1)
-				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, "user@email.com")
+				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, testEmail)
 
 				So(mockRedisClient.ExpireCalls(), ShouldHaveLength, 2) // Expects 2 due to refreshing by ID and Email
-				So(mockRedisClient.ExpireCalls()[0].Key, ShouldEqual, "user@email.com")
+				So(mockRedisClient.ExpireCalls()[0].Key, ShouldEqual, testEmail)
 				So(mockRedisClient.ExpireCalls()[0].Expiration, ShouldEqual, testTTL)
 
-				So(mockRedisClient.ExpireCalls()[1].Key, ShouldEqual, "1234")
+				So(mockRedisClient.ExpireCalls()[1].Key, ShouldEqual, testSessionID)
 				So(mockRedisClient.ExpireCalls()[1].Expiration, ShouldEqual, testTTL)
 			})
 
 			Convey("And the expected session is returned", func() {
 
 				So(s, ShouldNotBeEmpty)
-				So(s.Email, ShouldEqual, "user@email.com")
+				So(s.Email, ShouldEqual, testEmail)
 				So(s.LastAccessed.String(), ShouldNotEqual, respLastAccessed)
 			})
 		})
@@ -319,21 +371,21 @@ func TestClient_GetByEmail(t *testing.T) {
 
 	Convey("Given a session email client.GetByEmail returns an error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringResult(string(resp), nil),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolResult(false, errors.New("unable to refresh expiration")),
+			redis.NewStatusCmd(),
+			redis.NewStringResult(string(resp), nil),
+			redis.NewStatusCmd(),
+			redis.NewBoolResult(false, errors.New("unable to refresh expiration")),
 		)
 
 		Convey("When client uses the email to get the session", func() {
-			s, err := client.GetByEmail("user@email.com")
+			s, err := client.GetByEmail(testEmail)
 
 			Convey("Then redis client.Get is called with the expected parameters", func() {
 				So(mockRedisClient.GetCalls(), ShouldHaveLength, 1)
-				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, "user@email.com")
+				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, testEmail)
 
 				So(mockRedisClient.ExpireCalls(), ShouldHaveLength, 1) // Expects 2 due to refreshing by ID and Email
-				So(mockRedisClient.ExpireCalls()[0].Key, ShouldEqual, "user@email.com")
+				So(mockRedisClient.ExpireCalls()[0].Key, ShouldEqual, testEmail)
 				So(mockRedisClient.ExpireCalls()[0].Expiration, ShouldEqual, testTTL)
 			})
 
@@ -345,12 +397,36 @@ func TestClient_GetByEmail(t *testing.T) {
 		})
 	})
 
+	Convey("Given client.GetByID returns not found error", t, func() {
+		mockRedisClient, client := setUpMocks(
+			nil,
+			redis.NewStringResult("", redis.Nil),
+			nil,
+			nil,
+		)
+
+		Convey("When client.GetByID is called", func() {
+			s, err := client.GetByEmail(testEmail)
+
+			Convey("Then error.SessionNotFound", func() {
+				So(err, ShouldEqual, ErrSessionNotFound)
+				So(s, ShouldBeNil)
+			})
+
+			Convey("And the redis client is called with the expected parameters", func() {
+				So(mockRedisClient.GetCalls(), ShouldHaveLength, 1)
+				So(mockRedisClient.GetCalls()[0].Key, ShouldEqual, testEmail)
+				So(mockRedisClient.ExpireCalls(), ShouldHaveLength, 0)
+			})
+		})
+	})
+
 	Convey("Given a blank session email client.GetByEmail returns an error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringCmd(),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusCmd(),
+			redis.NewStringCmd(),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When client.GetByEmail is called has an empty ID", func() {
@@ -367,10 +443,10 @@ func TestClient_GetByEmail(t *testing.T) {
 
 	Convey("Given a session ID client.GetByEmail returns an error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringResult("", errors.New("unexpected end of JSON input")),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusCmd(),
+			redis.NewStringResult("", errors.New("unexpected end of JSON input")),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When client.GetByEmail is called with a valid session ID", func() {
@@ -394,10 +470,10 @@ func TestClient_GetByEmail(t *testing.T) {
 func TestClient_DeleteAll(t *testing.T) {
 	Convey("Given DeleteAll removes all sessions from cache", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringCmd(),
-			*redis.NewStatusCmd(),
-			*redis.NewBoolCmd(),
+			redis.NewStatusCmd(),
+			redis.NewStringCmd(),
+			redis.NewStatusCmd(),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When DeleteAll is called", func() {
@@ -412,10 +488,10 @@ func TestClient_DeleteAll(t *testing.T) {
 
 	Convey("Given DeleteAll returns an error", t, func() {
 		mockRedisClient, client := setUpMocks(
-			*redis.NewStatusCmd(),
-			*redis.NewStringCmd(),
-			*redis.NewStatusResult("fail", errors.New("some redis error")),
-			*redis.NewBoolCmd(),
+			redis.NewStatusCmd(),
+			redis.NewStringCmd(),
+			redis.NewStatusResult("fail", errors.New("some redis error")),
+			redis.NewBoolCmd(),
 		)
 
 		Convey("When DeleteAll is called", func() {
@@ -431,20 +507,20 @@ func TestClient_DeleteAll(t *testing.T) {
 	})
 }
 
-func setUpMocks(setStatusCmd redis.StatusCmd, getStringCmd redis.StringCmd, flushAllStatusCmd redis.StatusCmd, expireBoolCmd redis.BoolCmd) (*RedisClienterMock, SessionCache) {
+func setUpMocks(setStatusCmd *redis.StatusCmd, getStringCmd *redis.StringCmd, flushAllStatusCmd *redis.StatusCmd, expireBoolCmd *redis.BoolCmd) (*RedisClienterMock, SessionCache) {
 	mockRedisClient := &RedisClienterMock{
 		PingFunc: nil,
 		SetFunc: func(key string, value interface{}, ttl time.Duration) *redis.StatusCmd {
-			return &setStatusCmd
+			return setStatusCmd
 		},
 		GetFunc: func(key string) *redis.StringCmd {
-			return &getStringCmd
+			return getStringCmd
 		},
 		FlushAllFunc: func() *redis.StatusCmd {
-			return &flushAllStatusCmd
+			return flushAllStatusCmd
 		},
 		ExpireFunc: func(key string, expiration time.Duration) *redis.BoolCmd {
-			return &expireBoolCmd
+			return expireBoolCmd
 		}}
 	return mockRedisClient, &ElasticacheClient{
 		client: mockRedisClient,
