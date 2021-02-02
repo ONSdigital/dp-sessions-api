@@ -1,13 +1,22 @@
 package session
 
 import (
-	"encoding/json"
-	"github.com/google/uuid"
-	"time"
+"encoding/json"
+
+"github.com/google/uuid"
+"github.com/pkg/errors"
+
+"time"
 )
 
 const (
-	dateTimeFMT = "2006-01-02T15:04:05.000Z"
+	DateTimeFMT = "2006-01-02T15:04:05.000Z"
+)
+
+var (
+	EmailEmptyErr        = errors.New("error creating session email required but was empty")
+	StartEmptyErr        = errors.New("error unmarshalling session start field required but was missing/empty")
+	LastAccessedEmptyErr = errors.New("error unmarshalling session last accessed field required but was missing/empty")
 )
 
 // Session defines the structure required for a session
@@ -18,14 +27,9 @@ type Session struct {
 	LastAccessed time.Time `json:"last_accessed"`
 }
 
-// NewSessionDetails is the structure of the request needed to create a session
+// NewSessionDetails is the create HTTP request body required to creating new session
 type NewSessionDetails struct {
 	Email string `json:"email"`
-}
-
-// IDGenerator interface for creating new IDs
-type IDGenerator interface {
-	NewID() string
 }
 
 type jsonModel struct {
@@ -35,45 +39,78 @@ type jsonModel struct {
 	LastAccessed string `json:"last_accessed"`
 }
 
-// NewSession creates a new session
-func NewSession() *Session {
-	return &Session{
-		ID:           "",
-		Email:        "",
-		Start:        time.Time{},
-		LastAccessed: time.Time{},
+//New construct a new fully populated session object for the provided email. Returns session.EmailEmptyErr if the email
+//is empty/blank, returns an error if a new session ID could not be generated.
+func New(email string) (*Session, error) {
+	if len(email) == 0 {
+		return nil, EmailEmptyErr
 	}
-}
 
-// UpdateSession updates the session with email parameter
-func (s *Session) Update(email string) (*Session, error) {
-	id, err := newID()
+	id, err := uuid.NewUUID()
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "error generating new session ID")
+	}
+
+	var createdAt time.Time
+	createdAt, err = FormatTime(time.Now().UTC())
+	if err != nil {
+		return nil, errors.WithMessage(err, "error formatting session timestamp value")
 	}
 
 	return &Session{
-		ID:           id,
+		ID:           id.String(),
 		Email:        email,
-		Start:        time.Now().UTC(),
-		LastAccessed: time.Now().UTC(),
+		Start:        createdAt,
+		LastAccessed: createdAt,
 	}, nil
 }
 
-// MarshalJSON used to marshal Session object for outgoing requests
+// MarshalJSON is a custom JSON marshaller for Session objects. Handles marshalling time.Time fields into the expected date time format
 func (s *Session) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&jsonModel{
 		ID:           s.ID,
 		Email:        s.Email,
-		Start:        s.Start.Format(dateTimeFMT),
-		LastAccessed: s.LastAccessed.Format(dateTimeFMT),
+		Start:        s.Start.Format(DateTimeFMT),
+		LastAccessed: s.LastAccessed.Format(DateTimeFMT),
 	})
 }
 
-func newID() (string, error) {
-	id, err := uuid.NewUUID()
-	if err != nil {
-		return "", err
+func (s *Session) UnmarshalJSON(data []byte) error {
+	var raw jsonModel
+	var err error
+
+	if err = json.Unmarshal(data, &raw); err != nil {
+		return errors.WithMessage(err, "failed to unmarshal session JSON")
 	}
-	return id.String(), nil
+
+	if len(raw.Start) == 0 {
+		return StartEmptyErr
+	}
+
+	if len(raw.LastAccessed) == 0 {
+		return LastAccessedEmptyErr
+	}
+
+	var startT time.Time
+	startT, err = time.Parse(DateTimeFMT, raw.Start)
+	if err != nil {
+		return errors.WithMessage(err, "error parsing session.Start as time.Time value")
+	}
+
+	var lastAccessedT time.Time
+	lastAccessedT, err = time.Parse(DateTimeFMT, raw.LastAccessed)
+	if err != nil {
+		return errors.WithMessage(err, "error parsing session.LastAccessed as time.Time value")
+	}
+
+	s.ID = raw.ID
+	s.Email = raw.Email
+	s.Start = startT
+	s.LastAccessed = lastAccessedT
+	return nil
+}
+
+func FormatTime(t time.Time) (time.Time, error) {
+	// Format time t with the desired layout then parse it back to a time.Time object.
+	return time.Parse(DateTimeFMT, t.Format(DateTimeFMT))
 }
