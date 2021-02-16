@@ -2,8 +2,8 @@ package api
 
 import (
 	"context"
+
 	"github.com/ONSdigital/dp-authorisation/auth"
-	dpredis "github.com/ONSdigital/dp-redis"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
@@ -18,15 +18,15 @@ type API struct {
 	Router *mux.Router
 }
 
-func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler, elasticacheClient *dpredis.Client) *API {
+func Setup(ctx context.Context, r *mux.Router, permissions AuthHandler, cache Cache) *API {
 	api := &API{
 		Router: r,
 	}
 
-	r.HandleFunc("/sessions", permissions.Require(create, CreateSessionHandlerFunc(elasticacheClient))).Methods("POST")
-	r.HandleFunc("/sessions/{ID}", GetByIDSessionHandlerFunc(elasticacheClient, mux.Vars)).Methods("GET")
-	r.HandleFunc("/sessions/{Email}", GetByEmailSessionHandlerFunc(elasticacheClient, mux.Vars)).Methods("GET")
-	r.HandleFunc("/sessions", permissions.Require(delete, DeleteAllSessionsHandlerFunc(elasticacheClient))).Methods("DELETE")
+	r.HandleFunc("/sessions", permissions.Require(create, CreateSessionHandlerFunc(cache))).Methods("POST")
+	r.HandleFunc("/sessions/{ID}", GetByIDSessionHandlerFunc(cache, mux.Vars)).Methods("GET")
+	r.HandleFunc("/sessions/{Email}", GetByEmailSessionHandlerFunc(cache, mux.Vars)).Methods("GET")
+	r.HandleFunc("/sessions", permissions.Require(delete, DeleteAllSessionsHandlerFunc(cache))).Methods("DELETE")
 	return api
 }
 
