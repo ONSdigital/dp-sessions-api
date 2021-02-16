@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"crypto/tls"
+
 	"github.com/ONSdigital/dp-api-clients-go/zebedee"
 	"github.com/ONSdigital/dp-authorisation/auth"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	rchttp "github.com/ONSdigital/dp-net/http"
-	dpredis "github.com/ONSdigital/dp-redis"
 	"github.com/ONSdigital/dp-sessions-api/api"
+	"github.com/ONSdigital/dp-sessions-api/cache"
 	"github.com/ONSdigital/dp-sessions-api/config"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/ONSdigital/log.go/log"
@@ -54,9 +55,9 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
 	zebedeeClient := zebedee.New(cfg.ZebedeeURL)
 
-	var elasticacheClient *dpredis.Client
+	var elasticacheClient *cache.ElasticacheClient
 	if cfg.EnableRedisTLSConfig {
-		elasticacheClient, err = dpredis.NewClient(dpredis.Config{
+		elasticacheClient, err = cache.New(cache.Config{
 			Addr:     cfg.ElasticacheAddr,
 			Password: cfg.ElasticachePassword,
 			Database: cfg.ElasticacheDatabase,
@@ -66,7 +67,7 @@ func Run(buildTime, gitCommit, version string, svcErrors chan error) (*Service, 
 			},
 		})
 	} else {
-		elasticacheClient, err = dpredis.NewClient(dpredis.Config{
+		elasticacheClient, err = cache.New(cache.Config{
 			Addr:     cfg.ElasticacheAddr,
 			Password: cfg.ElasticachePassword,
 			Database: cfg.ElasticacheDatabase,
@@ -121,7 +122,7 @@ func (svc *Service) Close(ctx context.Context) {
 	log.Event(ctx, "graceful shutdown complete", log.INFO)
 }
 
-func registerCheckers(ctx context.Context, hc *healthcheck.HealthCheck, zebedeeClient *zebedee.Client, elasticacheClient *dpredis.Client) (err error) {
+func registerCheckers(ctx context.Context, hc *healthcheck.HealthCheck, zebedeeClient *zebedee.Client, elasticacheClient *cache.ElasticacheClient) (err error) {
 	hasErrors := false
 
 	if err = hc.AddCheck("Zebedee", zebedeeClient.Checker); err != nil {
